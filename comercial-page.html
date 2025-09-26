@@ -1,0 +1,3724 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sistema de Gestión de Órdenes - Dealer</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+<style>
+/* Estilos existentes sin cambios */
+* {
+margin: 0;
+padding: 0;
+box-sizing: border-box;
+font-family: 'Inter', sans-serif;
+}
+
+:root {
+/* Colores adaptados del ejemplo */
+--primary: #2563eb;
+--primary-dark: #1d4ed8;
+--secondary: #f97316;
+--secondary-dark: #ea580c;
+--danger: #ef4444;
+--warning: #f59e0b;
+--success: #10b981;
+--gray-50: #f9fafb;
+--gray-100: #f3f4f6;
+--gray-200: #e5e7eb;
+--gray-300: #d1d5db;
+--gray-400: #9ca3af;
+--gray-500: #6b7280;
+--gray-600: #4b5563;
+--gray-700: #374151;
+--gray-800: #1f2937;
+--gray-900: #111827;
+--v-theme-surface: 255, 255, 255;
+--header-bg: #1a3a5f;
+--header-text: #ffffff;
+--sidebar-bg: #f8fafc;
+--sidebar-border: #e2e8f0;
+--card-bg: #ffffff;
+--card-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+--table-header-bg: #f8fafc;
+--table-border: #e2e8f0;
+--btn-hover: #f1f5f9;
+--sidebar-width: 300px;
+--backlog-color: #8b5cf6; /* Color específico para la bandeja backlog */
+--tcp-color: #3b82f6; /* Color específico para la bandeja TCP */
+--cierre-color: #10b981; /* Color específico para la bandeja cierre */
+--finalizado-color: #6366f1; /* Color específico para la bandeja finalizado */
+}
+
+body {
+background-color: var(--gray-50);
+color: var(--gray-900);
+line-height: 1.6;
+display: flex;
+min-height: 100vh;
+}
+
+/* Sidebar Styles */
+.sidebar {
+width: var(--sidebar-width);
+background-color: rgb(47, 51, 73);
+color: var(--header-text);
+padding: 20px 0;
+display: flex;
+flex-direction: column;
+position: fixed;
+height: 100vh;
+overflow-y: auto;
+box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+z-index: 1000;
+}
+
+.sidebar-header {
+padding: 0 20px 30px;
+border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+margin-bottom: 20px;
+}
+
+.sidebar-title {
+font-size: 20px;
+font-weight: 700;
+display: flex;
+align-items: center;
+gap: 10px;
+}
+
+.sidebar-menu {
+flex: 1;
+}
+
+/* Estilos para módulos del menú */
+.menu-module {
+margin-bottom: 8px;
+}
+
+.module-title {
+display: flex;
+align-items: center;
+padding: 12px 20px;
+color: rgba(255, 255, 255, 0.9);
+font-weight: 600;
+cursor: pointer;
+transition: all 0.2s;
+border-left: 3px solid transparent;
+}
+
+.module-title:hover {
+background-color: rgba(255, 255, 255, 0.1);
+color: white;
+}
+
+.module-title i:first-child {
+width: 24px;
+margin-right: 12px;
+text-align: center;
+font-size: 18px;
+}
+
+.module-title span {
+flex: 1;
+}
+
+.module-arrow {
+font-size: 12px;
+transition: transform 0.3s;
+}
+
+.module-arrow.rotated {
+transform: rotate(180deg);
+}
+
+.module-content {
+max-height: 0;
+overflow: hidden;
+transition: max-height 0.3s ease-out;
+background-color: rgba(0, 0, 0, 0.1);
+}
+
+.module-content.expanded {
+max-height: 500px; /* Ajustar según la cantidad de elementos */
+}
+
+.module-content .menu-item {
+padding-left: 40px; /* Espacio adicional para submenús */
+font-size: 14px;
+}
+
+.module-content .menu-item i {
+width: 20px;
+margin-right: 12px;
+font-size: 16px;
+}
+
+.menu-item {
+display: block;
+padding: 14px 20px;
+color: rgba(255, 255, 255, 0.8);
+text-decoration: none;
+transition: all 0.2s;
+font-weight: 500;
+border-left: 3px solid transparent;
+white-space: nowrap;
+overflow: hidden;
+text-overflow: ellipsis;
+}
+
+.menu-item:hover {
+background-color: rgba(255, 255, 255, 0.1);
+color: white;
+}
+
+.menu-item.active {
+background-color: rgba(255, 255, 255, 0.15);
+color: white;
+}
+
+.menu-item.active.dealer-pendientes {
+border-left-color: var(--warning);
+}
+
+.menu-item.active.dealer-atendidos {
+border-left-color: var(--success);
+}
+
+.menu-item.active.dealer-buscador {
+border-left-color: var(--primary);
+}
+
+.menu-item i {
+width: 24px;
+margin-right: 15px;
+text-align: center;
+font-size: 18px;
+}
+
+.sidebar-footer {
+padding: 20px;
+border-top: 1px solid rgba(255, 255, 255, 0.1);
+font-size: 12px;
+color: rgba(255, 255, 255, 0.6);
+text-align: center;
+}
+
+/* Main Content */
+.main-container {
+flex: 1;
+margin-left: var(--sidebar-width);
+padding: 20px;
+display: flex;
+flex-direction: column;
+}
+
+.container {
+max-width: 1400px;
+margin: 0 auto;
+width: 100%;
+}
+
+header {
+background-color: rgb(var(--v-theme-surface));
+border-radius: 12px;
+padding: 24px;
+box-shadow: var(--card-shadow);
+margin-bottom: 24px;
+color: var(--header-text);
+}
+
+.header-top {
+display: flex;
+justify-content: space-between;
+align-items: center;
+margin-bottom: 20px;
+}
+
+.header-title {
+font-size: 28px;
+font-weight: 700;
+color: var(--header-text);
+}
+
+.user-info {
+display: flex;
+align-items: center;
+gap: 12px;
+}
+
+.user-avatar {
+width: 40px;
+height: 40px;
+border-radius: 50%;
+background-color: var(--primary);
+display: flex;
+align-items: center;
+justify-content: center;
+color: white;
+font-weight: 600;
+}
+
+.alert-banner {
+background-color: #fef3c7;
+border-left: 4px solid var(--warning);
+padding: 16px;
+border-radius: 8px;
+display: flex;
+align-items: center;
+gap: 12px;
+margin-bottom: 20px;
+}
+
+.alert-banner i {
+color: var(--warning);
+font-size: 20px;
+}
+
+.alert-text {
+font-weight: 500;
+color: var(--gray-800);
+}
+
+.alert-banner button {
+background-color: var(--warning);
+color: white;
+border: none;
+padding: 6px 12px;
+border-radius: 6px;
+font-weight: 500;
+cursor: pointer;
+margin-left: auto;
+transition: background-color 0.2s;
+}
+
+.alert-banner button:hover {
+background-color: #d97706;
+}
+
+.stats-container {
+display: grid;
+grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+gap: 16px;
+}
+
+.stat-card {
+background-color: var(--card-bg);
+border-radius: 8px;
+padding: 16px;
+box-shadow: var(--card-shadow);
+display: flex;
+align-items: center;
+gap: 12px;
+border: 1px solid var(--sidebar-border);
+}
+
+.stat-icon {
+width: 48px;
+height: 48px;
+border-radius: 8px;
+display: flex;
+align-items: center;
+justify-content: center;
+font-size: 20px;
+}
+
+.stat-icon.total {
+background-color: rgba(37, 99, 235, 0.1);
+color: var(--primary);
+}
+
+.stat-icon.critical {
+background-color: rgba(239, 68, 68, 0.1);
+color: var(--danger);
+}
+
+.stat-icon.processing {
+background-color: rgba(16, 185, 129, 0.1);
+color: var(--success);
+}
+
+.stat-icon.completed {
+background-color: rgba(99, 102, 241, 0.1);
+color: var(--finalizado-color);
+}
+
+.stat-content h3 {
+font-size: 24px;
+font-weight: 700;
+margin-bottom: 4px;
+color: var(--gray-900);
+}
+
+.stat-content p {
+color: var(--gray-500);
+font-size: 14px;
+}
+
+.main-content {
+background-color: var(--card-bg);
+border-radius: 12px;
+box-shadow: var(--card-shadow);
+overflow: hidden;
+border: 1px solid var(--sidebar-border);
+}
+
+.table-header {
+background-color: var(--table-header-bg);
+padding: 20px 24px;
+border-bottom: 1px solid var(--table-border);
+display: flex;
+justify-content: space-between;
+align-items: center;
+}
+
+.table-title {
+font-size: 18px;
+font-weight: 600;
+color: var(--gray-900);
+}
+
+.filter-actions {
+display: flex;
+gap: 12px;
+}
+
+.filter-btn {
+background-color: var(--card-bg);
+border: 1px solid var(--sidebar-border);
+border-radius: 6px;
+padding: 8px 12px;
+display: flex;
+align-items: center;
+gap: 6px;
+cursor: pointer;
+font-size: 14px;
+color: var(--gray-700);
+transition: all 0.2s;
+}
+
+.filter-btn:hover {
+background-color: var(--btn-hover);
+}
+
+.filter-btn.active {
+background-color: var(--primary);
+color: white;
+border-color: var(--primary);
+}
+
+.orders-table {
+width: 100%;
+border-collapse: collapse;
+}
+
+.orders-table th {
+text-align: left;
+padding: 12px 24px;
+font-weight: 600;
+color: var(--gray-600);
+font-size: 14px;
+background-color: var(--table-header-bg);
+border-bottom: 1px solid var(--table-border);
+}
+
+.orders-table td {
+padding: 16px 24px;
+border-bottom: 1px solid var(--table-border);
+}
+
+.orders-table tr:hover {
+background-color: var(--btn-hover);
+}
+
+.order-id {
+font-weight: 600;
+color: var(--primary);
+}
+
+.status-badge {
+display: inline-block;
+padding: 4px 8px;
+border-radius: 4px;
+font-size: 12px;
+font-weight: 500;
+}
+
+.status-pending {
+background-color: rgba(245, 158, 11, 0.1);
+color: var(--warning);
+}
+
+.status-responded {
+background-color: rgba(37, 99, 235, 0.1);
+color: var(--primary);
+}
+
+.status-validated {
+background-color: rgba(16, 185, 129, 0.1);
+color: var(--success);
+}
+
+.status-completed {
+background-color: rgba(99, 102, 241, 0.1);
+color: var(--finalizado-color);
+}
+
+.status-failed {
+background-color: rgba(239, 68, 68, 0.1);
+color: var(--danger);
+}
+
+.actions {
+display: flex;
+justify-content: center;
+gap: 6px;
+}
+
+.action-btn {
+width: 32px;
+height: 32px;
+border-radius: 6px;
+border: none;
+background-color: var(--gray-100);
+color: var(--gray-600);
+cursor: pointer;
+display: flex;
+align-items: center;
+justify-content: center;
+transition: all 0.2s;
+}
+
+.action-btn:hover {
+background-color: var(--gray-200);
+}
+
+.action-btn.primary {
+background-color: var(--primary);
+color: white;
+}
+
+.action-btn.primary:hover {
+background-color: var(--primary-dark);
+}
+
+/* Modal Detalle de Orden */
+.modal {
+display: none;
+position: fixed;
+z-index: 1000;
+left: 0;
+top: 0;
+width: 100%;
+height: 100%;
+background-color: rgba(0,0,0,0.5);
+align-items: center;
+justify-content: center;
+}
+
+.modal-content {
+background-color: var(--card-bg);
+border-radius: 12px;
+width: 90%;
+max-width: 800px;
+max-height: 80vh;
+overflow-y: auto;
+box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+border: 1px solid var(--sidebar-border);
+}
+
+.modal-header {
+padding: 20px 30px;
+border-bottom: 1px solid var(--table-border);
+display: flex;
+justify-content: space-between;
+align-items: center;
+background-color: var(--table-header-bg);
+}
+
+.modal-title {
+font-size: 20px;
+font-weight: 600;
+color: var(--gray-900);
+}
+
+.close-btn {
+background: none;
+border: none;
+font-size: 24px;
+color: var(--gray-500);
+cursor: pointer;
+}
+
+.modal-body {
+padding: 30px;
+}
+
+.form-group {
+margin-bottom: 20px;
+}
+
+.form-group label {
+display: block;
+margin-bottom: 8px;
+font-weight: 500;
+color: var(--gray-700);
+}
+
+.form-control {
+width: 100%;
+padding: 10px 14px;
+border: 1px solid var(--sidebar-border);
+border-radius: 6px;
+font-size: 14px;
+transition: border-color 0.2s;
+background-color: var(--card-bg);
+}
+
+.form-control:focus {
+outline: none;
+border-color: var(--primary);
+box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.form-actions {
+display: flex;
+justify-content: flex-end;
+gap: 12px;
+margin-top: 24px;
+}
+
+.btn {
+padding: 10px 16px;
+border-radius: 6px;
+font-weight: 500;
+cursor: pointer;
+border: none;
+font-size: 14px;
+transition: all 0.2s;
+}
+
+.btn-primary {
+background-color: var(--primary);
+color: white;
+}
+
+.btn-primary:hover {
+background-color: var(--primary-dark);
+}
+
+.btn-secondary {
+background-color: var(--card-bg);
+color: var(--gray-700);
+border: 1px solid var(--sidebar-border);
+}
+
+.btn-secondary:hover {
+background-color: var(--btn-hover);
+}
+
+.detail-tabs {
+display: flex;
+border-bottom: 1px solid var(--table-border);
+margin-bottom: 20px;
+}
+
+.detail-tab {
+padding: 16px 24px;
+cursor: pointer;
+font-weight: 500;
+color: var(--gray-500);
+border-bottom: 2px solid transparent;
+transition: all 0.2s;
+white-space: nowrap;
+}
+
+.detail-tab.active {
+color: var(--primary);
+border-bottom-color: var(--primary);
+}
+
+.detail-content {
+display: none;
+}
+
+.detail-content.active {
+display: block;
+}
+
+.detail-row {
+display: flex;
+margin-bottom: 16px;
+}
+
+.detail-label {
+width: 150px;
+font-weight: 500;
+color: var(--gray-600);
+}
+
+.detail-value {
+flex: 1;
+color: var(--gray-800);
+}
+
+.timeline {
+position: relative;
+padding-left: 30px;
+}
+
+.timeline::before {
+content: '';
+position: absolute;
+left: 8px;
+top: 0;
+height: 100%;
+width: 2px;
+background-color: var(--sidebar-border);
+}
+
+.timeline-item {
+position: relative;
+margin-bottom: 20px;
+}
+
+.timeline-item::before {
+content: '';
+position: absolute;
+left: -30px;
+top: 6px;
+width: 16px;
+height: 16px;
+border-radius: 50%;
+background-color: white;
+border: 2px solid var(--primary);
+}
+
+.timeline-date {
+font-size: 12px;
+color: var(--gray-500);
+margin-bottom: 4px;
+}
+
+.timeline-area {
+font-size: 12px;
+color: var(--primary);
+margin-bottom: 2px;
+font-weight: 500;
+}
+
+.timeline-user {
+font-size: 12px;
+color: var(--gray-600);
+margin-bottom: 4px;
+}
+
+.timeline-content {
+background-color: var(--btn-hover);
+padding: 12px;
+border-radius: 6px;
+}
+
+/* Sección de acciones de backlog */
+.contact-section {
+background-color: var(--btn-hover);
+border-radius: 8px;
+padding: 20px;
+margin-top: 20px;
+border: 1px solid var(--sidebar-border);
+}
+
+.contact-header {
+display: flex;
+justify-content: space-between;
+align-items: center;
+margin-bottom: 16px;
+}
+
+.contact-title {
+font-size: 16px;
+font-weight: 600;
+color: var(--gray-900);
+}
+
+.contact-status {
+font-size: 14px;
+padding: 4px 8px;
+border-radius: 4px;
+font-weight: 500;
+}
+
+.contact-status.pending {
+background-color: rgba(245, 158, 11, 0.1);
+color: var(--warning);
+}
+
+.contact-status.completed {
+background-color: rgba(16, 185, 129, 0.1);
+color: var(--success);
+}
+
+.contact-actions {
+display: grid;
+grid-template-columns: repeat(2, 1fr);
+gap: 16px;
+}
+
+.contact-action-btn {
+display: flex;
+align-items: center;
+gap: 12px;
+padding: 16px;
+border-radius: 8px;
+border: 1px solid var(--sidebar-border);
+background-color: var(--card-bg);
+cursor: pointer;
+transition: all 0.2s;
+font-size: 14px;
+}
+
+.contact-action-btn:hover {
+transform: translateY(-2px);
+box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.contact-action-btn i {
+font-size: 24px;
+width: 30px;
+text-align: center;
+}
+
+.contact-action-btn.primary {
+border-left: 4px solid var(--primary);
+}
+
+.contact-action-btn.primary i {
+color: var(--primary);
+}
+
+.contact-action-btn.backlog {
+border-left: 4px solid var(--backlog-color);
+}
+
+.contact-action-btn.backlog i {
+color: var(--backlog-color);
+}
+
+.contact-action-content {
+flex: 1;
+}
+
+.contact-action-title {
+font-weight: 600;
+margin-bottom: 4px;
+color: var(--gray-900);
+}
+
+.contact-action-desc {
+font-size: 12px;
+color: var(--gray-500);
+}
+
+/* Sección de validación */
+.validation-section {
+margin-top: 20px;
+border: 1px solid var(--sidebar-border);
+border-radius: 8px;
+padding: 16px;
+}
+
+.validation-title {
+font-size: 16px;
+font-weight: 600;
+color: var(--gray-900);
+margin-bottom: 16px;
+}
+
+.validation-question {
+margin-bottom: 16px;
+}
+
+.validation-question-label {
+font-weight: 500;
+color: var(--gray-700);
+margin-bottom: 8px;
+display: block;
+}
+
+.validation-options {
+display: flex;
+gap: 12px;
+}
+
+.validation-option {
+display: flex;
+align-items: center;
+gap: 6px;
+}
+
+.validation-option input[type="radio"] {
+accent-color: var(--primary);
+}
+
+.validation-option label {
+font-size: 14px;
+color: var(--gray-600);
+cursor: pointer;
+}
+
+/* Estilos para el buscador */
+.search-box {
+display: flex;
+align-items: center;
+background-color: white;
+border-radius: 8px;
+box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+overflow: hidden;
+width: 100%;
+max-width: 500px;
+}
+
+.search-box input {
+border: none;
+padding: 0.75rem 1rem;
+flex: 1;
+font-size: 0.9rem;
+}
+
+.search-box button {
+background-color: var(--primary);
+color: white;
+border: none;
+padding: 0.75rem 1rem;
+cursor: pointer;
+transition: background-color 0.2s;
+}
+
+.search-box button:hover {
+background-color: var(--primary-dark);
+}
+
+/* Página en desarrollo */
+.development-page {
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+padding: 60px 20px;
+text-align: center;
+}
+
+.development-icon {
+font-size: 64px;
+color: var(--gray-400);
+margin-bottom: 24px;
+}
+
+.development-title {
+font-size: 24px;
+font-weight: 600;
+color: var(--gray-700);
+margin-bottom: 12px;
+}
+
+.development-text {
+font-size: 16px;
+color: var(--gray-500);
+max-width: 500px;
+}
+
+/* Estilos para filtros de certificaciones */
+.cert-date-filter {
+background-color: var(--gray-100);
+padding: 1rem;
+border-radius: 8px;
+margin-bottom: 1.5rem;
+}
+
+.cert-date-filter .form-label {
+font-weight: 600;
+color: var(--gray-700);
+margin-bottom: 0.25rem;
+}
+
+.cert-date-filter .form-control {
+border: 1px solid var(--gray-300);
+border-radius: 4px;
+}
+
+.cert-date-filter .btn {
+background-color: var(--primary);
+color: white;
+border: none;
+padding: 0.5rem 1rem;
+border-radius: 4px;
+font-weight: 500;
+transition: background-color 0.2s;
+}
+
+.cert-date-filter .btn:hover {
+background-color: var(--primary-dark);
+}
+
+/* Media queries para dispositivos móviles */
+@media (max-width: 768px) {
+.sidebar {
+transform: translateX(-100%);
+transition: transform 0.3s ease;
+}
+
+.sidebar.open {
+transform: translateX(0);
+}
+
+.main-container {
+margin-left: 0;
+}
+
+.container {
+padding: 10px;
+}
+
+.header-top {
+flex-direction: column;
+gap: 16px;
+align-items: flex-start;
+}
+
+.stats-container {
+grid-template-columns: 1fr;
+}
+
+.table-header {
+flex-direction: column;
+gap: 16px;
+align-items: flex-start;
+}
+
+.orders-table {
+font-size: 14px;
+}
+
+.orders-table th,
+.orders-table td {
+padding: 10px;
+}
+
+.contact-actions {
+grid-template-columns: 1fr;
+gap: 12px;
+}
+
+.contact-action-btn {
+padding: 12px;
+}
+
+.modal-content {
+max-width: 95%;
+}
+
+.detail-tab {
+padding: 12px 16px;
+}
+}
+
+/* NUEVOS ESTILOS PARA LA SECCIÓN DE INTENTOS DE LLAMADA */
+.call-attempts {
+margin-top: 20px;
+}
+
+.call-attempts-header {
+display: flex;
+justify-content: space-between;
+align-items: center;
+margin-bottom: 16px;
+}
+
+.call-attempts-title {
+font-size: 16px;
+font-weight: 600;
+color: var(--gray-900);
+}
+
+.call-attempts-list {
+border: 1px solid var(--sidebar-border);
+border-radius: 8px;
+overflow: hidden;
+}
+
+.call-attempt-item {
+padding: 16px;
+border-bottom: 1px solid var(--sidebar-border);
+display: flex;
+justify-content: space-between;
+align-items: center;
+}
+
+.call-attempt-item:last-child {
+border-bottom: none;
+}
+
+.call-attempt-info {
+flex: 1;
+}
+
+.call-attempt-date {
+font-size: 14px;
+font-weight: 500;
+color: var(--gray-700);
+margin-bottom: 4px;
+}
+
+.call-attempt-result {
+font-size: 12px;
+color: var(--gray-500);
+margin-bottom: 2px;
+}
+
+.call-attempt-comments {
+font-size: 12px;
+color: var(--gray-600);
+font-style: italic;
+}
+
+.call-attempt-actions {
+display: flex;
+gap: 8px;
+}
+
+.call-attempt-action {
+background: none;
+border: none;
+color: var(--gray-500);
+cursor: pointer;
+font-size: 16px;
+padding: 6px;
+border-radius: 4px;
+transition: all 0.2s;
+}
+
+.call-attempt-action:hover {
+background-color: var(--gray-100);
+color: var(--gray-700);
+}
+</style>
+</head>
+<body>
+<!-- Sidebar -->
+<aside class="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-title">
+      <i class="fas fa-user-tie"></i>
+      <span>Dealer</span>
+    </div>
+  </div>
+
+  <nav class="sidebar-menu">
+    <div class="menu-module">
+      <div class="module-title" onclick="toggleModule('dealer')">
+        <i class="fas fa-clipboard-list"></i>
+        <span>Torre de control</span>
+        <i class="fas fa-chevron-down module-arrow"></i>
+      </div>
+      <div class="module-content expanded" id="dealer">
+        <a href="#" class="menu-item dealer-pendientes active" data-page="dealer-pendientes">
+          <i class="fas fa-clock"></i>
+          <span>Bandeja Pendientes</span>
+        </a>
+        <a href="#" class="menu-item dealer-atendidos" data-page="dealer-atendidos">
+          <i class="fas fa-check-circle"></i>
+          <span>Bandeja Atendidos</span>
+        </a>
+        <a href="#" class="menu-item dealer-buscador" data-page="dealer-buscador">
+          <i class="fas fa-search"></i>
+          <span>Buscador de Órdenes</span>
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="sidebar-footer">
+    <p>© 2023 Sistema de Gestión de Dealer</p>
+  </div>
+</aside>
+
+<!-- Main Content -->
+<main class="main-container">
+<div class="container">
+<header>
+<div class="header-top">
+<h1 class="header-title" id="pageTitle">Bandeja Pendientes - Órdenes por Responder</h1>
+<div class="user-info">
+<span>Dealer: Carlos Rodríguez</span>
+<div class="user-avatar">CR</div>
+</div>
+</div>
+
+<div class="alert-banner" id="alertBanner">
+<i class="fas fa-info-circle"></i>
+<div class="alert-text" id="alertText">
+<strong>Tienes órdenes pendientes de respuesta</strong>. Revisa y responde a la brevedad.
+</div>
+<button id="criticalOrdersBtn">Ver órdenes pendientes</button>
+</div>
+
+<div class="stats-container" id="statsContainer">
+<div class="stat-card">
+<div class="stat-icon total">
+<i class="fas fa-clipboard-list"></i>
+</div>
+<div class="stat-content">
+<h3>12</h3>
+<p>Total órdenes</p>
+</div>
+</div>
+
+<div class="stat-card">
+<div class="stat-icon critical">
+<i class="fas fa-exclamation-circle"></i>
+</div>
+<div class="stat-content">
+<h3>5</h3>
+<p>Urgentes</p>
+</div>
+</div>
+
+<div class="stat-card">
+<div class="stat-icon processing">
+<i class="fas fa-clock"></i>
+</div>
+<div class="stat-content">
+<h3>8</h3>
+<p>Pendientes</p>
+</div>
+</div>
+</div>
+</header>
+
+<!-- Contenedor de páginas -->
+<div id="pagesContainer">
+<!-- Página Dealer Pendientes -->
+<div id="dealer-pendientes-page" class="page-content">
+  <div class="main-content">
+    <div class="table-header">
+      <h2 class="table-title">Órdenes Derivadas Pendientes</h2>
+      <div class="filter-actions">
+        <button class="filter-btn active" onclick="filterDealerOrders('all', 'pendientes')">
+          <i class="fas fa-list"></i> Todas
+        </button>
+        <button class="filter-btn" onclick="filterDealerOrders('urgent', 'pendientes')">
+          <i class="fas fa-exclamation-circle"></i> Urgentes
+        </button>
+        <button class="filter-btn" onclick="filterDealerOrders('today', 'pendientes')">
+          <i class="fas fa-calendar-day"></i> De Hoy
+        </button>
+      </div>
+    </div>
+
+    <!-- Alerta de órdenes pendientes -->
+    <div class="alert-banner" id="pendingDealerAlert" style="display: none; background-color: rgba(245, 158, 11, 0.1); border-left-color: var(--warning);">
+      <i class="fas fa-exclamation-triangle" style="color: var(--warning);"></i>
+      <div class="alert-text">
+        <strong id="pendingDealerCount">0</strong> órdenes pendientes de respuesta. Prioriza su atención.
+      </div>
+      <button id="viewPendingDealerBtn">Ver órdenes pendientes</button>
+    </div>
+
+    <table class="orders-table">
+      <thead>
+        <tr>
+          <th>N° Orden</th>
+          <th>Cliente</th>
+          <th>Dirección</th>
+          <th>Fecha Derivación</th>
+          <th>Motivo Derivación</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="dealerPendientesTableBody">
+        <tr class="order-row" data-priority="alta" data-derivation-date="2023-06-14">
+          <td class="order-id">ORD-001250</td>
+          <td>Juan Pérez</td>
+          <td>Av. Principal 123, Lima</td>
+          <td>2023-06-14</td>
+          <td>Negociación de condiciones</td>
+          <td>
+            <div class="actions">
+              <button class="action-btn primary" onclick="viewDealerPendingOrderDetail('ORD-001250')">
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+        <tr class="order-row" data-priority="media" data-derivation-date="2023-06-13">
+          <td class="order-id">ORD-001251</td>
+          <td>María López</td>
+          <td>Jr. Secundaria 456, Cusco</td>
+          <td>2023-06-13</td>
+          <td>Información adicional requerida</td>
+          <td>
+            <div class="actions">
+              <button class="action-btn primary" onclick="viewDealerPendingOrderDetail('ORD-001251')">
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+        <tr class="order-row" data-priority="baja" data-derivation-date="2023-06-12">
+          <td class="order-id">ORD-001252</td>
+          <td>Carlos Mendoza</td>
+          <td>Av. Central 789, Arequipa</td>
+          <td>2023-06-12</td>
+          <td>Cliente no localizado</td>
+          <td>
+            <div class="actions">
+              <button class="action-btn primary" onclick="viewDealerPendingOrderDetail('ORD-001252')">
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+        <!-- Nuevas órdenes pendientes -->
+        <tr class="order-row" data-priority="alta" data-derivation-date="2023-06-15">
+          <td class="order-id">ORD-001255</td>
+          <td>Rosa Martínez</td>
+          <td>Calle Los Rosales 321, Chiclayo</td>
+          <td>2023-06-15</td>
+          <td>Requiere autorización especial</td>
+          <td>
+            <div class="actions">
+              <button class="action-btn primary" onclick="viewDealerPendingOrderDetail('ORD-001255')">
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+        <tr class="order-row" data-priority="alta" data-derivation-date="2023-06-15">
+          <td class="order-id">ORD-001256</td>
+          <td>Miguel Ángel Ruiz</td>
+          <td>Av. La Marina 456, Lima</td>
+          <td>2023-06-15</td>
+          <td>Cliente VIP solicita beneficios adicionales</td>
+          <td>
+            <div class="actions">
+              <button class="action-btn primary" onclick="viewDealerPendingOrderDetail('ORD-001256')">
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+        <tr class="order-row" data-priority="media" data-derivation-date="2023-06-14">
+          <td class="order-id">ORD-001257</td>
+          <td>Patricia Sánchez</td>
+          <td>Jr. Huáscar 789, Cusco</td>
+          <td>2023-06-14</td>
+          <td>Problemas con facturación</td>
+          <td>
+            <div class="actions">
+              <button class="action-btn primary" onclick="viewDealerPendingOrderDetail('ORD-001257')">
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+        <tr class="order-row" data-priority="media" data-derivation-date="2023-06-14">
+          <td class="order-id">ORD-001258</td>
+          <td>Jorge Ramírez</td>
+          <td>Av. Arequipa 101, Tacna</td>
+          <td>2023-06-14</td>
+          <td>Cambio de dirección de instalación</td>
+          <td>
+            <div class="actions">
+              <button class="action-btn primary" onclick="viewDealerPendingOrderDetail('ORD-001258')">
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+        <tr class="order-row" data-priority="baja" data-derivation-date="2023-06-13">
+          <td class="order-id">ORD-001259</td>
+          <td>Carla Gutiérrez</td>
+          <td>Calle San Martín 202, Piura</td>
+          <td>2023-06-13</td>
+          <td>Consulta sobre paquetes promocionales</td>
+          <td>
+            <div class="actions">
+              <button class="action-btn primary" onclick="viewDealerPendingOrderDetail('ORD-001259')">
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Página Dealer Atendidos -->
+<div id="dealer-atendidos-page" class="page-content" style="display: none;">
+  <div class="main-content">
+    <div class="table-header">
+      <h2 class="table-title">Órdenes Derivadas Atendidas</h2>
+      <div class="filter-actions">
+        <button class="filter-btn active" onclick="filterDealerOrders('all', 'atendidos')">
+          <i class="fas fa-list"></i> Todas
+        </button>
+        <button class="filter-btn" onclick="filterDealerOrders('recent', 'atendidos')">
+          <i class="fas fa-calendar-week"></i> Recientes
+        </button>
+        <button class="filter-btn" onclick="filterDealerOrders('resolved', 'atendidos')">
+          <i class="fas fa-check"></i> Resueltas
+        </button>
+      </div>
+    </div>
+
+    <!-- Alerta de órdenes recientemente atendidas -->
+    <div class="alert-banner" id="recentDealerAlert" style="display: none; background-color: rgba(37, 99, 235, 0.1); border-left-color: var(--primary);">
+      <i class="fas fa-info-circle" style="color: var(--primary);"></i>
+      <div class="alert-text">
+        <strong id="recentDealerCount">0</strong> órdenes atendidas recientemente. Revisa su estado.
+      </div>
+      <button id="viewRecentDealerBtn">Ver órdenes recientes</button>
+    </div>
+
+    <table class="orders-table">
+      <thead>
+        <tr>
+          <th>N° Orden</th>
+          <th>Cliente</th>
+          <th>Fecha Respuesta</th>
+          <th>Resultado</th>
+          <th>Acción Realizada</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="dealerAtendidosTableBody">
+        <tr class="order-row" data-response-date="2023-06-12 15:45">
+          <td class="order-id">ORD-001253</td>
+          <td>Ana García</td>
+          <td>2023-06-12 15:45</td>
+          <td><span class="status-badge status-validated">Aprobado con condiciones</span></td>
+          <td>Continuar con la orden</td>
+          <td>
+            <div class="actions">
+              <button class="action-btn primary" onclick="viewDealerAttendedOrderDetail('ORD-001253')">
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+        <tr class="order-row" data-response-date="2023-06-11 14:20">
+          <td class="order-id">ORD-001254</td>
+          <td>Luis Fernández</td>
+          <td>2023-06-11 14:20</td>
+          <td><span class="status-badge status-failed">Rechazado</span></td>
+          <td>Cancelar orden</td>
+          <td>
+            <div class="actions">
+              <button class="action-btn primary" onclick="viewDealerAttendedOrderDetail('ORD-001254')">
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+        <!-- Nuevas órdenes atendidas -->
+        <tr class="order-row" data-response-date="2023-06-10 16:30">
+          <td class="order-id">ORD-001260</td>
+          <td>Fernando Torres</td>
+          <td>2023-06-10 16:30</td>
+          <td><span class="status-badge status-validated">Aprobado</span></td>
+          <td>Continuar con la orden</td>
+          <td>
+            <div class="actions">
+              <button class="action-btn primary" onclick="viewDealerAttendedOrderDetail('ORD-001260')">
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+        <tr class="order-row" data-response-date="2023-06-09 11:15">
+          <td class="order-id">ORD-001261</td>
+          <td>Gabriela Vargas</td>
+          <td>2023-06-09 11:15</td>
+          <td><span class="status-badge status-validated">Aprobado con condiciones</span></td>
+          <td>Reprogramar visita</td>
+          <td>
+            <div class="actions">
+              <button class="action-btn primary" onclick="viewDealerAttendedOrderDetail('ORD-001261')">
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+        <tr class="order-row" data-response-date="2023-06-08 14:45">
+          <td class="order-id">ORD-001262</td>
+          <td>Ricardo Morales</td>
+          <td>2023-06-08 14:45</td>
+          <td><span class="status-badge status-failed">Rechazado</span></td>
+          <td>Cancelar orden</td>
+          <td>
+            <div class="actions">
+              <button class="action-btn primary" onclick="viewDealerAttendedOrderDetail('ORD-001262')">
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+        <tr class="order-row" data-response-date="2023-06-07 10:20">
+          <td class="order-id">ORD-001263</td>
+          <td>Silvia Navarro</td>
+          <td>2023-06-07 10:20</td>
+          <td><span class="status-badge status-validated">Aprobado con condiciones</span></td>
+          <td>Cambiar tipo de servicio</td>
+          <td>
+            <div class="actions">
+              <button class="action-btn primary" onclick="viewDealerAttendedOrderDetail('ORD-001263')">
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+        <tr class="order-row" data-response-date="2023-06-06 13:10">
+          <td class="order-id">ORD-001264</td>
+          <td>Roberto Herrera</td>
+          <td>2023-06-06 13:10</td>
+          <td><span class="status-badge status-validated">Aprobado</span></td>
+          <td>Continuar con la orden</td>
+          <td>
+            <div class="actions">
+              <button class="action-btn primary" onclick="viewDealerAttendedOrderDetail('ORD-001264')">
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+        <tr class="order-row" data-response-date="2023-06-05 09:30">
+          <td class="order-id">ORD-001265</td>
+          <td>Mónica Díaz</td>
+          <td>2023-06-05 09:30</td>
+          <td><span class="status-badge status-failed">Rechazado</span></td>
+          <td>Cancelar orden</td>
+          <td>
+            <div class="actions">
+              <button class="action-btn primary" onclick="viewDealerAttendedOrderDetail('ORD-001265')">
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Página Buscador de Órdenes -->
+<div id="dealer-buscador-page" class="page-content" style="display: none;">
+  <div class="main-content">
+    <div class="table-header">
+      <h2 class="table-title">Buscador de Órdenes</h2>
+    </div>
+
+    <!-- Formulario de búsqueda -->
+    <div class="cert-date-filter">
+      <div class="row">
+        <div class="col-md-8">
+          <label for="orderSearch" class="form-label">Buscar por N° de Orden</label>
+          <div class="search-box">
+            <input type="text" id="orderSearch" class="form-control" placeholder="Ingrese el número de orden (ej: ORD-001234)">
+            <button type="button" onclick="searchOrder()">
+              <i class="fas fa-search"></i>
+            </button>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <label for="orderStatusFilter" class="form-label">Filtrar por Estado</label>
+          <select id="orderStatusFilter" class="form-control">
+            <option value="">Todos</option>
+            <option value="pending">Pendiente</option>
+            <option value="responded">Atendido</option>
+            <option value="resolved">Resuelto</option>
+            <option value="cancelled">Cancelado</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Resultados de búsqueda -->
+    <div id="searchResults" style="display: none;">
+      <div class="table-header">
+        <h2 class="table-title">Resultados de Búsqueda</h2>
+      </div>
+      
+      <table class="orders-table">
+        <thead>
+          <tr>
+            <th>N° Orden</th>
+            <th>Cliente</th>
+            <th>Estado Actual</th>
+            <th>Última Actualización</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="searchResultsTableBody">
+          <!-- Las filas se cargarán dinámicamente -->
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Mensaje cuando no hay resultados -->
+    <div id="noResultsMessage" class="development-page" style="display: none;">
+      <i class="fas fa-search development-icon"></i>
+      <h3 class="development-title">No se encontraron resultados</h3>
+      <p class="development-text">Intente con otro número de orden o verifique que el número sea correcto.</p>
+    </div>
+  </div>
+</div>
+</div>
+</main>
+
+<!-- Modal para ver detalle de orden pendiente (Dealer) -->
+<div id="dealerPendingOrderDetailModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 class="modal-title">Detalle de Orden Pendiente: <span id="dealerPendingDetailOrderId"></span></h3>
+      <button class="close-btn" onclick="closeModal('dealerPendingOrderDetailModal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="detail-tabs">
+        <div class="detail-tab active" onclick="switchDealerTab('general')">Datos Generales</div>
+        <div class="detail-tab" onclick="switchDealerTab('derivation')">Información de Derivación</div>
+        <div class="detail-tab" onclick="switchDealerTab('history')">Historial</div>
+      </div>
+
+      <div id="dealer-general-tab" class="detail-content active">
+        <div class="detail-row">
+          <div class="detail-label">Cliente:</div>
+          <div class="detail-value" id="dealerPendingDetailCustomer">-</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">Dirección:</div>
+          <div class="detail-value" id="dealerPendingDetailAddress">-</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">Teléfono:</div>
+          <div class="detail-value" id="dealerPendingDetailPhone">-</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">Tipo de Servicio:</div>
+          <div class="detail-value" id="dealerPendingDetailServiceType">-</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">Fecha OFSC:</div>
+          <div class="detail-value" id="dealerPendingDetailOFSCDate">-</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">Prioridad:</div>
+          <div class="detail-value" id="dealerPendingDetailPriority">-</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">Estado Actual:</div>
+          <div class="detail-value" id="dealerPendingDetailStatus">-</div>
+        </div>
+      </div>
+
+      <div id="dealer-derivation-tab" class="detail-content">
+        <div class="detail-row">
+          <div class="detail-label">Fecha de Derivación:</div>
+          <div class="detail-value" id="dealerPendingDetailDerivationDate">-</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">Derivado por:</div>
+          <div class="detail-value" id="dealerPendingDetailDerivationUser">-</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">Motivo de Derivación:</div>
+          <div class="detail-value" id="dealerPendingDetailDerivationReason">-</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">Comentarios de Derivación:</div>
+          <div class="detail-value" id="dealerPendingDetailDerivationComments">-</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">Área de Origen:</div>
+          <div class="detail-value" id="dealerPendingDetailOriginArea">-</div>
+        </div>
+      </div>
+
+      <div id="dealer-history-tab" class="detail-content">
+        <div class="timeline" id="dealerPendingOrderTimeline">
+          <!-- La línea de tiempo se cargará dinámicamente -->
+        </div>
+      </div>
+
+      <!-- Sección de acciones -->
+      <div class="contact-section" style="margin-top: 24px;">
+        <div class="contact-header">
+          <h4 class="contact-title">Acciones Disponibles</h4>
+          <span class="contact-status pending">Pendiente de respuesta</span>
+        </div>
+
+        <div class="contact-actions">
+          <div class="contact-action-btn primary" onclick="showDealerResponseModal()">
+            <i class="fas fa-reply"></i>
+            <div class="contact-action-content">
+              <div class="contact-action-title">Responder Orden</div>
+              <div class="contact-action-desc">Enviar respuesta a la agendadora</div>
+            </div>
+          </div>
+          
+          <div class="contact-action-btn backlog" onclick="showDealerTransferModal()">
+            <i class="fas fa-exchange-alt"></i>
+            <div class="contact-action-content">
+              <div class="contact-action-title">Transferir</div>
+              <div class="contact-action-desc">Transferir a otro dealer</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para responder orden (Dealer) -->
+<div id="dealerResponseModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 class="modal-title">Responder Orden: <span id="dealerResponseOrderId"></span></h3>
+      <button class="close-btn" onclick="closeModal('dealerResponseModal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Datos de la Orden:</label>
+        <div style="background-color: var(--btn-hover); padding: 12px; border-radius: 6px; margin-bottom: 16px; border: 1px solid var(--sidebar-border);">
+          <div><strong>Cliente:</strong> <span id="dealerResponseCustomer">-</span></div>
+          <div><strong>Dirección:</strong> <span id="dealerResponseAddress">-</span></div>
+          <div><strong>Motivo Derivación:</strong> <span id="dealerResponseDerivationReason">-</span></div>
+        </div>
+      </div>
+
+      <form id="dealerResponseForm">
+        <div class="form-group">
+          <label for="dealerResponseResult">Resultado:</label>
+          <select id="dealerResponseResult" class="form-control">
+            <option value="">Seleccione resultado</option>
+            <option value="approved">Aprobado</option>
+            <option value="approved-conditions">Aprobado con condiciones</option>
+            <option value="rejected">Rechazado</option>
+            <option value="info-required">Requiere más información</option>
+            <option value="negotiation">Requiere negociación</option>
+            <option value="transfer">Transferir a otro área</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label for="dealerResponseAction">Acción a Realizar:</label>
+          <select id="dealerResponseAction" class="form-control">
+            <option value="">Seleccione acción</option>
+            <option value="continue">Continuar con la orden</option>
+            <option value="reschedule">Reprogramar visita</option>
+            <option value="cancel">Cancelar orden</option>
+            <option value="change-service">Cambiar tipo de servicio</option>
+            <option value="additional-info">Solicitar información adicional</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label for="dealerResponseComments">Comentarios:</label>
+          <textarea id="dealerResponseComments" class="form-control" rows="4" placeholder="Ingrese comentarios detallados sobre su respuesta"></textarea>
+        </div>
+        
+        <div class="form-group">
+          <label for="dealerResponseNextStep">Próximo Paso:</label>
+          <select id="dealerResponseNextStep" class="form-control">
+            <option value="">Seleccione próximo paso</option>
+            <option value="back-to-agendadora">Devolver a agendadora</option>
+            <option value="assign-technician">Asignar técnico</option>
+            <option value="schedule-visit">Agendar visita</option>
+            <option value="contact-client">Contactar cliente</option>
+          </select>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('dealerResponseModal')">Cancelar</button>
+          <button type="button" class="btn btn-primary" onclick="saveDealerResponse()">Enviar Respuesta</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para ver detalle de orden atendida (Dealer) -->
+<div id="dealerAttendedOrderDetailModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 class="modal-title">Detalle de Orden Atendida: <span id="dealerAttendedDetailOrderId"></span></h3>
+      <button class="close-btn" onclick="closeModal('dealerAttendedOrderDetailModal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="detail-tabs">
+        <div class="detail-tab active" onclick="switchDealerAttendedTab('general')">Datos Generales</div>
+        <div class="detail-tab" onclick="switchDealerAttendedTab('response')">Mi Respuesta</div>
+        <div class="detail-tab" onclick="switchDealerAttendedTab('history')">Historial</div>
+      </div>
+
+      <div id="dealer-attended-general-tab" class="detail-content active">
+        <div class="detail-row">
+          <div class="detail-label">Cliente:</div>
+          <div class="detail-value" id="dealerAttendedDetailCustomer">-</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">Dirección:</div>
+          <div class="detail-value" id="dealerAttendedDetailAddress">-</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">Teléfono:</div>
+          <div class="detail-value" id="dealerAttendedDetailPhone">-</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">Tipo de Servicio:</div>
+          <div class="detail-value" id="dealerAttendedDetailServiceType">-</div>
+        </div>
+      </div>
+
+      <div id="dealer-attended-response-tab" class="detail-content">
+        <div class="detail-row">
+          <div class="detail-label">Fecha de Respuesta:</div>
+          <div class="detail-value" id="dealerAttendedDetailResponseDate">-</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">Resultado:</div>
+          <div class="detail-value" id="dealerAttendedDetailResponseResult">-</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">Acción Realizada:</div>
+          <div class="detail-value" id="dealerAttendedDetailResponseAction">-</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">Comentarios:</div>
+          <div class="detail-value" id="dealerAttendedDetailResponseComments">-</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">Próximo Paso:</div>
+          <div class="detail-value" id="dealerAttendedDetailResponseNextStep">-</div>
+        </div>
+      </div>
+
+      <div id="dealer-attended-current-tab" class="detail-content">
+        <div class="detail-row">
+          <div class="detail-label">Estado Actual:</div>
+          <div class="detail-value" id="dealerAttendedDetailCurrentStatus">-</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">Última Actualización:</div>
+          <div class="detail-value" id="dealerAttendedDetailLastUpdate">-</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">Responsable Actual:</div>
+          <div class="detail-value" id="dealerAttendedDetailCurrentResponsible">-</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">Próxima Acción:</div>
+          <div class="detail-value" id="dealerAttendedDetailNextAction">-</div>
+        </div>
+      </div>
+
+      <div id="dealer-attended-history-tab" class="detail-content">
+        <div class="timeline" id="dealerAttendedOrderTimeline">
+          <!-- La línea de tiempo se cargará dinámicamente -->
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Reemplazar el contenido del modal searchOrderDetailModal -->
+<div id="searchOrderDetailModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 class="modal-title">Detalle de Orden: <span id="searchDetailOrderId"></span></h3>
+      <button class="close-btn" onclick="closeModal('searchOrderDetailModal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="detail-tabs">
+        <div class="detail-tab active" onclick="switchSearchTab('general')">Datos Generales</div>
+        <div class="detail-tab" onclick="switchSearchTab('scheduling')">Agendamiento</div>
+        <div class="detail-tab" onclick="switchSearchTab('calls')">Historial de Llamadas</div>
+        <div class="detail-tab" onclick="switchSearchTab('history')">Historial</div>
+      </div>
+
+      <div id="search-general-tab" class="detail-content active">
+        <div class="detail-row">
+          <div class="detail-label">Cliente:</div>
+          <div class="detail-value" id="searchDetailCustomer">-</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">Dirección:</div>
+          <div class="detail-value" id="searchDetailAddress">-</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">Teléfono:</div>
+          <div class="detail-value" id="searchDetailPhone">-</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">Tipo de Servicio:</div>
+          <div class="detail-value" id="searchDetailServiceType">-</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">Estado Actual:</div>
+          <div class="detail-value" id="searchDetailStatus">-</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">Fecha Creación:</div>
+          <div class="detail-value" id="searchDetailCreationDate">-</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">Última Actualización:</div>
+          <div class="detail-value" id="searchDetailLastUpdate">-</div>
+        </div>
+      </div>
+
+      <div id="search-scheduling-tab" class="detail-content">
+        <h4 class="validation-title">Información de Agendamiento</h4>
+        <div class="validation-section">
+          <div class="detail-row">
+            <div class="detail-label">Fecha y Hora Agendado:</div>
+            <div class="detail-value" id="searchScheduledDateTime">-</div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-label">Duración Estimada:</div>
+            <div class="detail-value" id="searchEstimatedDuration">-</div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-label">Técnico Asignado:</div>
+            <div class="detail-value" id="searchAssignedTechnician">-</div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-label">Estado de Agendamiento:</div>
+            <div class="detail-value" id="searchSchedulingStatus">-</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="search-calls-tab" class="detail-content">
+        <div class="call-attempts">
+          <div class="call-attempts-header">
+            <h4 class="call-attempts-title">Historial de Llamadas</h4>
+          </div>
+
+          <div class="call-attempts-list" id="searchCallsList">
+            <!-- Los intentos de llamada se cargarán dinámicamente -->
+          </div>
+        </div>
+      </div>
+
+      <div id="search-history-tab" class="detail-content">
+        <div class="timeline" id="searchTrackingTimeline">
+          <!-- La línea de tiempo de trazabilidad se cargará dinámicamente -->
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Datos de ejemplo para las órdenes del Dealer
+const dealerOrdersData = {
+  'ORD-001250': {
+    customer: 'Juan Pérez',
+    address: 'Av. Principal 123, Lima',
+    phone: '987654321',
+    serviceType: 'Instalación de Internet',
+    ofscDate: '2023-06-15',
+    priority: 'Alta',
+    status: 'pending',
+    derivationDate: '2023-06-14',
+    derivationReason: 'Negociación de condiciones',
+    derivationComments: 'Cliente requiere condiciones especiales de pago',
+    derivationUser: 'María González',
+    originArea: 'Atención al Cliente',
+    responseDate: null,
+    responseUser: null,
+    responseResult: null,
+    responseAction: null,
+    responseComments: null,
+    responseNextStep: null,
+    currentStatus: 'Pendiente de respuesta comercial',
+    currentResponsible: 'Carlos Rodríguez (Dealer)',
+    lastUpdate: '2023-06-14 10:30',
+    nextAction: 'Esperando respuesta del dealer',
+    // NUEVOS CAMPOS DE AGENDAMIENTO
+    scheduledDateTime: '2023-06-15 10:30',
+    estimatedDuration: '2 horas',
+    assignedTechnician: 'Pedro Rodríguez',
+    schedulingStatus: 'Confirmado',
+    // NUEVOS CAMPOS DE LLAMADAS
+    callCount: 3,
+    callHistory: [
+      {
+        date: '2023-06-14 09:15',
+        agent: 'María González',
+        result: 'No contestó',
+        comments: 'Llamada sin respuesta'
+      },
+      {
+        date: '2023-06-14 14:30',
+        agent: 'María González',
+        result: 'Cliente ocupado',
+        comments: 'Comunicación ocupada'
+      },
+      {
+        date: '2023-06-14 16:45',
+        agent: 'María González',
+        result: 'Contactado',
+        comments: 'Cliente solicita negociación de condiciones'
+      }
+    ]
+  },
+  'ORD-001251': {
+    customer: 'María López',
+    address: 'Jr. Secundaria 456, Cusco',
+    phone: '987654322',
+    serviceType: 'Reparación de línea',
+    ofscDate: '2023-06-16',
+    priority: 'Media',
+    status: 'pending',
+    derivationDate: '2023-06-13',
+    derivationReason: 'Información adicional requerida',
+    derivationComments: 'Se necesita confirmar tipo de instalación',
+    derivationUser: 'María González',
+    originArea: 'Atención al Cliente',
+    responseDate: null,
+    responseUser: null,
+    responseResult: null,
+    responseAction: null,
+    responseComments: null,
+    responseNextStep: null,
+    currentStatus: 'Pendiente de respuesta comercial',
+    currentResponsible: 'Carlos Rodríguez (Dealer)',
+    lastUpdate: '2023-06-13 14:15',
+    nextAction: 'Esperando respuesta del dealer',
+    // NUEVOS CAMPOS DE AGENDAMIENTO
+    scheduledDateTime: '2023-06-16 14:00',
+    estimatedDuration: '1.5 horas',
+    assignedTechnician: 'Luis Fernández',
+    schedulingStatus: 'Pendiente',
+    // NUEVOS CAMPOS DE LLAMADAS
+    callCount: 2,
+    callHistory: [
+      {
+        date: '2023-06-13 11:30',
+        agent: 'María González',
+        result: 'No contestó',
+        comments: 'Llamada sin respuesta'
+      },
+      {
+        date: '2023-06-13 15:20',
+        agent: 'María González',
+        result: 'Contactado',
+        comments: 'Cliente necesita confirmar tipo de instalación'
+      }
+    ]
+  },
+  'ORD-001252': {
+    customer: 'Carlos Mendoza',
+    address: 'Av. Central 789, Arequipa',
+    phone: '987654323',
+    serviceType: 'Cambio de equipo',
+    ofscDate: '2023-06-20',
+    priority: 'Baja',
+    status: 'pending',
+    derivationDate: '2023-06-12',
+    derivationReason: 'Cliente no localizado',
+    derivationComments: 'No se pudo contactar al cliente en la dirección proporcionada',
+    derivationUser: 'María González',
+    originArea: 'Atención al Cliente',
+    responseDate: null,
+    responseUser: null,
+    responseResult: null,
+    responseAction: null,
+    responseComments: null,
+    responseNextStep: null,
+    currentStatus: 'Pendiente de respuesta comercial',
+    currentResponsible: 'Carlos Rodríguez (Dealer)',
+    lastUpdate: '2023-06-12 11:20',
+    nextAction: 'Esperando respuesta del dealer',
+    // NUEVOS CAMPOS DE AGENDAMIENTO
+    scheduledDateTime: '2023-06-20 09:00',
+    estimatedDuration: '3 horas',
+    assignedTechnician: 'Jorge Ramírez',
+    schedulingStatus: 'Por confirmar',
+    // NUEVOS CAMPOS DE LLAMADAS
+    callCount: 1,
+    callHistory: [
+      {
+        date: '2023-06-12 10:15',
+        agent: 'María González',
+        result: 'No localizado',
+        comments: 'Dirección incorrecta'
+      }
+    ]
+  },
+  'ORD-001253': {
+    customer: 'Ana García',
+    address: 'Calle Las Flores 101, Trujillo',
+    phone: '987654324',
+    serviceType: 'Instalación de TV',
+    ofscDate: '2023-06-15',
+    priority: 'Alta',
+    status: 'responded',
+    derivationDate: '2023-06-11',
+    derivationReason: 'Caso comercial especial',
+    derivationComments: 'Cliente solicita paquete premium con descuento',
+    derivationUser: 'María González',
+    originArea: 'Atención al Cliente',
+    responseDate: '2023-06-12 15:45',
+    responseUser: 'Carlos Rodríguez',
+    responseResult: 'Aprobado con condiciones',
+    responseAction: 'Continuar con la orden',
+    responseComments: 'Se aprobó el paquete premium con 15% de descuento por 6 meses',
+    responseNextStep: 'Devolver a agendadora',
+    currentStatus: 'En proceso de instalación',
+    currentResponsible: 'Pedro Rodríguez (Técnico)',
+    lastUpdate: '2023-06-13 10:30',
+    nextAction: 'Realizar instalación',
+    // NUEVOS CAMPOS DE AGENDAMIENTO
+    scheduledDateTime: '2023-06-15 11:00',
+    estimatedDuration: '2.5 horas',
+    assignedTechnician: 'Pedro Rodríguez',
+    schedulingStatus: 'Completado',
+    // NUEVOS CAMPOS DE LLAMADAS
+    callCount: 4,
+    callHistory: [
+      {
+        date: '2023-06-11 10:45',
+        agent: 'María González',
+        result: 'No contestó',
+        comments: 'Llamada sin respuesta'
+      },
+      {
+        date: '2023-06-11 14:20',
+        agent: 'María González',
+        result: 'Contactado',
+        comments: 'Cliente solicita paquete premium con descuento'
+      },
+      {
+        date: '2023-06-12 09:30',
+        agent: 'Carlos Rodríguez',
+        result: 'Negociación',
+        comments: 'Ofreciendo condiciones especiales'
+      },
+      {
+        date: '2023-06-12 15:45',
+        agent: 'Carlos Rodríguez',
+        result: 'Aprobado',
+        comments: 'Cliente acepta condiciones'
+      }
+    ]
+  },
+  'ORD-001254': {
+    customer: 'Luis Fernández',
+    address: 'Pasaje Los Pinos 202, Piura',
+    phone: '987654325',
+    serviceType: 'Migración de servicio',
+    ofscDate: '2023-06-16',
+    priority: 'Media',
+    status: 'responded',
+    derivationDate: '2023-06-10',
+    derivationReason: 'Requiere autorización especial',
+    derivationComments: 'Cliente necesita autorización para migración de servicio corporativo',
+    derivationUser: 'María González',
+    originArea: 'Atención al Cliente',
+    responseDate: '2023-06-11 14:20',
+    responseUser: 'Carlos Rodríguez',
+    responseResult: 'Rechazado',
+    responseAction: 'Cancelar orden',
+    responseComments: 'El cliente no cumple con los requisitos para el servicio corporativo',
+    responseNextStep: 'Devolver a agendadora para cancelación',
+    currentStatus: 'Cancelada',
+    currentResponsible: 'María González (Agendadora)',
+    lastUpdate: '2023-06-12 09:15',
+    nextAction: 'Notificar al cliente',
+    // NUEVOS CAMPOS DE AGENDAMIENTO
+    scheduledDateTime: '2023-06-16 15:30',
+    estimatedDuration: '2 horas',
+    assignedTechnician: 'No asignado',
+    schedulingStatus: 'Cancelado',
+    // NUEVOS CAMPOS DE LLAMADAS
+    callCount: 2,
+    callHistory: [
+      {
+        date: '2023-06-10 11:00',
+        agent: 'María González',
+        result: 'Contactado',
+        comments: 'Cliente necesita autorización para servicio corporativo'
+      },
+      {
+        date: '2023-06-11 10:30',
+        agent: 'Carlos Rodríguez',
+        result: 'Rechazado',
+        comments: 'Cliente no cumple requisitos para servicio corporativo'
+      }
+    ]
+  },
+  // Nuevas órdenes pendientes
+  'ORD-001255': {
+    customer: 'Rosa Martínez',
+    address: 'Calle Los Rosales 321, Chiclayo',
+    phone: '987654326',
+    serviceType: 'Instalación de Internet + TV',
+    ofscDate: '2023-06-18',
+    priority: 'Alta',
+    status: 'pending',
+    derivationDate: '2023-06-15',
+    derivationReason: 'Requiere autorización especial',
+    derivationComments: 'Cliente es empresa y requiere facturación con RUC',
+    derivationUser: 'María González',
+    originArea: 'Atención al Cliente',
+    responseDate: null,
+    responseUser: null,
+    responseResult: null,
+    responseAction: null,
+    responseComments: null,
+    responseNextStep: null,
+    currentStatus: 'Pendiente de respuesta comercial',
+    currentResponsible: 'Carlos Rodríguez (Dealer)',
+    lastUpdate: '2023-06-15 09:45',
+    nextAction: 'Esperando respuesta del dealer',
+    // NUEVOS CAMPOS DE AGENDAMIENTO
+    scheduledDateTime: '2023-06-18 10:00',
+    estimatedDuration: '3 horas',
+    assignedTechnician: 'Miguel Ángel Torres',
+    schedulingStatus: 'Pendiente',
+    // NUEVOS CAMPOS DE LLAMADAS
+    callCount: 2,
+    callHistory: [
+      {
+        date: '2023-06-15 08:30',
+        agent: 'María González',
+        result: 'No contestó',
+        comments: 'Llamada sin respuesta'
+      },
+      {
+        date: '2023-06-15 09:20',
+        agent: 'María González',
+        result: 'Contactado',
+        comments: 'Cliente es empresa y requiere facturación con RUC'
+      }
+    ]
+  },
+  'ORD-001256': {
+    customer: 'Miguel Ángel Ruiz',
+    address: 'Av. La Marina 456, Lima',
+    phone: '987654327',
+    serviceType: 'Upgrade de servicio',
+    ofscDate: '2023-06-17',
+    priority: 'Alta',
+    status: 'pending',
+    derivationDate: '2023-06-15',
+    derivationReason: 'Cliente VIP solicita beneficios adicionales',
+    derivationComments: 'Cliente con más de 5 años de antigüedad solicita upgrade sin costo',
+    derivationUser: 'María González',
+    originArea: 'Atención al Cliente',
+    responseDate: null,
+    responseUser: null,
+    responseResult: null,
+    responseAction: null,
+    responseComments: null,
+    responseNextStep: null,
+    currentStatus: 'Pendiente de respuesta comercial',
+    currentResponsible: 'Carlos Rodríguez (Dealer)',
+    lastUpdate: '2023-06-15 11:10',
+    nextAction: 'Esperando respuesta del dealer',
+    // NUEVOS CAMPOS DE AGENDAMIENTO
+    scheduledDateTime: '2023-06-17 14:30',
+    estimatedDuration: '2 horas',
+    assignedTechnician: 'Juan Carlos Silva',
+    schedulingStatus: 'Confirmado',
+    // NUEVOS CAMPOS DE LLAMADAS
+    callCount: 3,
+    callHistory: [
+      {
+        date: '2023-06-15 09:45',
+        agent: 'María González',
+        result: 'No contestó',
+        comments: 'Llamada sin respuesta'
+      },
+      {
+        date: '2023-06-15 10:30',
+        agent: 'María González',
+        result: 'Contactado',
+        comments: 'Cliente VIP solicita beneficios adicionales'
+      },
+      {
+        date: '2023-06-15 11:00',
+        agent: 'María González',
+        result: 'Negociación',
+        comments: 'Cliente insiste en upgrade sin costo'
+      }
+    ]
+  },
+  'ORD-001257': {
+    customer: 'Patricia Sánchez',
+    address: 'Jr. Huáscar 789, Cusco',
+    phone: '987654328',
+    serviceType: 'Reclamo por facturación',
+    ofscDate: '2023-06-19',
+    priority: 'Media',
+    status: 'pending',
+    derivationDate: '2023-06-14',
+    derivationReason: 'Problemas con facturación',
+    derivationComments: 'Cliente reporta cargos no reconocidos en su factura',
+    derivationUser: 'María González',
+    originArea: 'Atención al Cliente',
+    responseDate: null,
+    responseUser: null,
+    responseResult: null,
+    responseAction: null,
+    responseComments: null,
+    responseNextStep: null,
+    currentStatus: 'Pendiente de respuesta comercial',
+    currentResponsible: 'Carlos Rodríguez (Dealer)',
+    lastUpdate: '2023-06-14 15:20',
+    nextAction: 'Esperando respuesta del dealer',
+    // NUEVOS CAMPOS DE AGENDAMIENTO
+    scheduledDateTime: '2023-06-19 11:00',
+    estimatedDuration: '1 hora',
+    assignedTechnician: 'No aplica',
+    schedulingStatus: 'Por confirmar',
+    // NUEVOS CAMPOS DE LLAMADAS
+    callCount: 2,
+    callHistory: [
+      {
+        date: '2023-06-14 14:00',
+        agent: 'María González',
+        result: 'Contactado',
+        comments: 'Cliente reporta cargos no reconocidos'
+      },
+      {
+        date: '2023-06-14 14:45',
+        agent: 'María González',
+        result: 'Reclamo',
+        comments: 'Cliente envía comprobantes de pago'
+      }
+    ]
+  },
+  'ORD-001258': {
+    customer: 'Jorge Ramírez',
+    address: 'Av. Arequipa 101, Tacna',
+    phone: '987654329',
+    serviceType: 'Cambio de dirección',
+    ofscDate: '2023-06-20',
+    priority: 'Media',
+    status: 'pending',
+    derivationDate: '2023-06-14',
+    derivationReason: 'Cambio de dirección de instalación',
+    derivationComments: 'Cliente se mudó y necesita cambiar dirección de instalación',
+    derivationUser: 'María González',
+    originArea: 'Atención al Cliente',
+    responseDate: null,
+    responseUser: null,
+    responseResult: null,
+    responseAction: null,
+    responseComments: null,
+    responseNextStep: null,
+    currentStatus: 'Pendiente de respuesta comercial',
+    currentResponsible: 'Carlos Rodríguez (Dealer)',
+    lastUpdate: '2023-06-14 16:30',
+    nextAction: 'Esperando respuesta del dealer',
+    // NUEVOS CAMPOS DE AGENDAMIENTO
+    scheduledDateTime: '2023-06-20 09:00',
+    estimatedDuration: '2 horas',
+    assignedTechnician: 'Roberto Mendoza',
+    schedulingStatus: 'Pendiente',
+    // NUEVOS CAMPOS DE LLAMADAS
+    callCount: 1,
+    callHistory: [
+      {
+        date: '2023-06-14 15:45',
+        agent: 'María González',
+        result: 'Contactado',
+        comments: 'Cliente se mudó y necesita cambiar dirección'
+      }
+    ]
+  },
+  'ORD-001259': {
+    customer: 'Carla Gutiérrez',
+    address: 'Calle San Martín 202, Piura',
+    phone: '987654330',
+    serviceType: 'Consulta sobre paquetes',
+    ofscDate: '2023-06-21',
+    priority: 'Baja',
+    status: 'pending',
+    derivationDate: '2023-06-13',
+    derivationReason: 'Consulta sobre paquetes promocionales',
+    derivationComments: 'Cliente interesada en paquetes promocionales para empresas',
+    derivationUser: 'María González',
+    originArea: 'Atención al Cliente',
+    responseDate: null,
+    responseUser: null,
+    responseResult: null,
+    responseAction: null,
+    responseComments: null,
+    responseNextStep: null,
+    currentStatus: 'Pendiente de respuesta comercial',
+    currentResponsible: 'Carlos Rodríguez (Dealer)',
+    lastUpdate: '2023-06-13 17:15',
+    nextAction: 'Esperando respuesta del dealer',
+    // NUEVOS CAMPOS DE AGENDAMIENTO
+    scheduledDateTime: '2023-06-21 15:00',
+    estimatedDuration: '1 hora',
+    assignedTechnician: 'No aplica',
+    schedulingStatus: 'Por confirmar',
+    // NUEVOS CAMPOS DE LLAMADAS
+    callCount: 1,
+    callHistory: [
+      {
+        date: '2023-06-13 16:45',
+        agent: 'María González',
+        result: 'Contactado',
+        comments: 'Cliente interesada en paquetes promocionales para empresas'
+      }
+    ]
+  },
+  // Nuevas órdenes atendidas
+  'ORD-001260': {
+    customer: 'Fernando Torres',
+    address: 'Av. Javier Prado 345, Lima',
+    phone: '987654331',
+    serviceType: 'Instalación de Internet',
+    ofscDate: '2023-06-12',
+    priority: 'Media',
+    status: 'responded',
+    derivationDate: '2023-06-09',
+    derivationReason: 'Solicitud de instalación en zona de cobertura limitada',
+    derivationComments: 'Dirección se encuentra en zona de cobertura limitada, requiere verificación técnica',
+    derivationUser: 'María González',
+    originArea: 'Atención al Cliente',
+    responseDate: '2023-06-10 16:30',
+    responseUser: 'Carlos Rodríguez',
+    responseResult: 'Aprobado',
+    responseAction: 'Continuar con la orden',
+    responseComments: 'Se realizó verificación técnica y se confirmó cobertura en la zona',
+    responseNextStep: 'Devolver a agendadora',
+    currentStatus: 'Agendada para instalación',
+    currentResponsible: 'Pedro Rodríguez (Técnico)',
+    lastUpdate: '2023-06-11 09:20',
+    nextAction: 'Realizar instalación',
+    // NUEVOS CAMPOS DE AGENDAMIENTO
+    scheduledDateTime: '2023-06-12 10:00',
+    estimatedDuration: '2 horas',
+    assignedTechnician: 'Pedro Rodríguez',
+    schedulingStatus: 'Confirmado',
+    // NUEVOS CAMPOS DE LLAMADAS
+    callCount: 3,
+    callHistory: [
+      {
+        date: '2023-06-09 14:20',
+        agent: 'María González',
+        result: 'Contactado',
+        comments: 'Cliente solicita instalación en zona de cobertura limitada'
+      },
+      {
+        date: '2023-06-10 10:15',
+        agent: 'Carlos Rodríguez',
+        result: 'Verificación',
+        comments: 'Se coordina visita técnica para verificar cobertura'
+      },
+      {
+        date: '2023-06-10 16:30',
+        agent: 'Carlos Rodríguez',
+        result: 'Aprobado',
+        comments: 'Se confirma cobertura en la zona del cliente'
+      }
+    ]
+  },
+  'ORD-001261': {
+    customer: 'Gabriela Vargas',
+    address: 'Calle Las Orquídeas 567, Arequipa',
+    phone: '987654332',
+    serviceType: 'Reparación de línea telefónica',
+    ofscDate: '2023-06-13',
+    priority: 'Alta',
+    status: 'responded',
+    derivationDate: '2023-06-08',
+    derivationReason: 'Cliente con múltiples intentos de reparación fallidos',
+    derivationComments: 'Cliente reporta que ya ha tenido 3 visitas técnicas sin solución',
+    derivationUser: 'María González',
+    originArea: 'Atención al Cliente',
+    responseDate: '2023-06-09 11:15',
+    responseUser: 'Carlos Rodríguez',
+    responseResult: 'Aprobado con condiciones',
+    responseAction: 'Reprogramar visita',
+    responseComments: 'Se asignará técnico especialista y se ofrecerá compensación por inconvenientes',
+    responseNextStep: 'Devolver a agendadora',
+    currentStatus: 'Reprogramada con técnico especialista',
+    currentResponsible: 'Luis Fernández (Técnico especialista)',
+    lastUpdate: '2023-06-10 14:30',
+    nextAction: 'Realizar reparación especializada',
+    // NUEVOS CAMPOS DE AGENDAMIENTO
+    scheduledDateTime: '2023-06-13 09:00',
+    estimatedDuration: '3 horas',
+    assignedTechnician: 'Luis Fernández',
+    schedulingStatus: 'Confirmado',
+    // NUEVOS CAMPOS DE LLAMADAS
+    callCount: 4,
+    callHistory: [
+      {
+        date: '2023-06-08 10:30',
+        agent: 'María González',
+        result: 'Contactado',
+        comments: 'Cliente reporta múltiples intentos fallidos'
+      },
+      {
+        date: '2023-06-08 15:45',
+        agent: 'María González',
+        result: 'Reclamo',
+        comments: 'Cliente molesto por falta de solución'
+      },
+      {
+        date: '2023-06-09 09:00',
+        agent: 'Carlos Rodríguez',
+        result: 'Negociación',
+        comments: 'Se ofrece compensación por inconvenientes'
+      },
+      {
+        date: '2023-06-09 11:15',
+        agent: 'Carlos Rodríguez',
+        result: 'Aprobado',
+        comments: 'Cliente acepta solución propuesta'
+      }
+    ]
+  },
+  'ORD-001262': {
+    customer: 'Ricardo Morales',
+    address: 'Av. Brasil 890, Trujillo',
+    phone: '987654333',
+    serviceType: 'Cancelación de servicio',
+    ofscDate: '2023-06-14',
+    priority: 'Media',
+    status: 'responded',
+    derivationDate: '2023-06-07',
+    derivationReason: 'Solicitud de cancelación por mala calidad del servicio',
+    derivationComments: 'Cliente reporta constantes interrupciones en el servicio',
+    derivationUser: 'María González',
+    originArea: 'Atención al Cliente',
+    responseDate: '2023-06-08 14:45',
+    responseUser: 'Carlos Rodríguez',
+    responseResult: 'Rechazado',
+    responseAction: 'Cancelar orden',
+    responseComments: 'Cliente tiene contrato vigente hasta fin de año, se le ofrece solución técnica',
+    responseNextStep: 'Devolver a agendadora para seguimiento',
+    currentStatus: 'En proceso de retención',
+    currentResponsible: 'María González (Agendadora)',
+    lastUpdate: '2023-06-09 10:15',
+    nextAction: 'Ofrecer solución técnica al cliente',
+    // NUEVOS CAMPOS DE AGENDAMIENTO
+    scheduledDateTime: 'No aplica',
+    estimatedDuration: 'No aplica',
+    assignedTechnician: 'No asignado',
+    schedulingStatus: 'Cancelado',
+    // NUEVOS CAMPOS DE LLAMADAS
+    callCount: 3,
+    callHistory: [
+      {
+        date: '2023-06-07 11:20',
+        agent: 'María González',
+        result: 'Contactado',
+        comments: 'Cliente solicita cancelación por mala calidad'
+      },
+      {
+        date: '2023-06-08 10:30',
+        agent: 'Carlos Rodríguez',
+        result: 'Negociación',
+        comments: 'Se informa sobre contrato vigente'
+      },
+      {
+        date: '2023-06-08 14:45',
+        agent: 'Carlos Rodríguez',
+        result: 'Rechazado',
+        comments: 'Cliente insiste en cancelación'
+      }
+    ]
+  },
+  'ORD-001263': {
+    customer: 'Silvia Navarro',
+    address: 'Jr. Unión 123, Iquitos',
+    phone: '987654334',
+    serviceType: 'Cambio de plan',
+    ofscDate: '2023-06-15',
+    priority: 'Baja',
+    status: 'responded',
+    derivationDate: '2023-06-06',
+    derivationReason: 'Cliente solicita downgrade de plan por costo',
+    derivationComments: 'Cliente no puede mantener el plan actual por situación económica',
+    derivationUser: 'María González',
+    originArea: 'Atención al Cliente',
+    responseDate: '2023-06-07 10:20',
+    responseUser: 'Carlos Rodríguez',
+    responseResult: 'Aprobado con condiciones',
+    responseAction: 'Cambiar tipo de servicio',
+    responseComments: 'Se aprueba downgrade de plan con reducción temporal de costo por 3 meses',
+    responseNextStep: 'Devolver a agendadora',
+    currentStatus: 'Cambio de plan en proceso',
+    currentResponsible: 'María González (Agendadora)',
+    lastUpdate: '2023-06-08 11:45',
+    nextAction: 'Realizar cambio de plan',
+    // NUEVOS CAMPOS DE AGENDAMIENTO
+    scheduledDateTime: '2023-06-15 14:00',
+    estimatedDuration: '1 hora',
+    assignedTechnician: 'No aplica',
+    schedulingStatus: 'Pendiente',
+    // NUEVOS CAMPOS DE LLAMADAS
+    callCount: 2,
+    callHistory: [
+      {
+        date: '2023-06-06 15:30',
+        agent: 'María González',
+        result: 'Contactado',
+        comments: 'Cliente solicita downgrade por situación económica'
+      },
+      {
+        date: '2023-06-07 10:20',
+        agent: 'Carlos Rodríguez',
+        result: 'Aprobado',
+        comments: 'Se ofrece reducción temporal de costo'
+      }
+    ]
+  },
+  'ORD-001264': {
+    customer: 'Roberto Herrera',
+    address: 'Av. La Paz 456, Puno',
+    phone: '987654335',
+    serviceType: 'Instalación de Internet',
+    ofscDate: '2023-06-16',
+    priority: 'Media',
+    status: 'responded',
+    derivationDate: '2023-06-05',
+    derivationReason: 'Cliente en zona rural requiere instalación especial',
+    derivationComments: 'Dirección se encuentra en zona rural con dificultades de acceso',
+    derivationUser: 'María González',
+    originArea: 'Atención al Cliente',
+    responseDate: '2023-06-06 13:10',
+    responseUser: 'Carlos Rodríguez',
+    responseResult: 'Aprobado',
+    responseAction: 'Continuar con la orden',
+    responseComments: 'Se coordinará instalación especial con equipo adecuado para zona rural',
+    responseNextStep: 'Devolver a agendadora',
+    currentStatus: 'Agendada para instalación especial',
+    currentResponsible: 'Miguel Ángel Torres (Técnico especialista)',
+    lastUpdate: '2023-06-07 09:30',
+    nextAction: 'Realizar instalación especial',
+    // NUEVOS CAMPOS DE AGENDAMIENTO
+    scheduledDateTime: '2023-06-16 10:00',
+    estimatedDuration: '4 horas',
+    assignedTechnician: 'Miguel Ángel Torres',
+    schedulingStatus: 'Confirmado',
+    // NUEVOS CAMPOS DE LLAMADAS
+    callCount: 2,
+    callHistory: [
+      {
+        date: '2023-06-05 14:15',
+        agent: 'María González',
+        result: 'Contactado',
+        comments: 'Cliente en zona rural requiere instalación especial'
+      },
+      {
+        date: '2023-06-06 13:10',
+        agent: 'Carlos Rodríguez',
+        result: 'Aprobado',
+        comments: 'Se coordina instalación con equipo especial'
+      }
+    ]
+  },
+  'ORD-001265': {
+    customer: 'Mónica Díaz',
+    address: 'Calle Comercio 789, Cajamarca',
+    phone: '987654336',
+    serviceType: 'Migración a fibra óptica',
+    ofscDate: '2023-06-17',
+    priority: 'Alta',
+    status: 'responded',
+    derivationDate: '2023-06-04',
+    derivationReason: 'Cliente solicita migración a fibra óptica pero no tiene cobertura',
+    derivationComments: 'Cliente insiste en migración a fibra óptica pero su zona no tiene cobertura disponible',
+    derivationUser: 'María González',
+    originArea: 'Atención al Cliente',
+    responseDate: '2023-06-05 09:30',
+    responseUser: 'Carlos Rodríguez',
+    responseResult: 'Rechazado',
+    responseAction: 'Cancelar orden',
+    responseComments: 'Zona del cliente no cuenta con cobertura de fibra óptica, se ofrece alternativa de servicio',
+    responseNextStep: 'Devolver a agendadora para cancelación',
+    currentStatus: 'Cancelada',
+    currentResponsible: 'María González (Agendadora)',
+    lastUpdate: '2023-06-06 10:45',
+    nextAction: 'Ofrecer alternativa de servicio al cliente',
+    // NUEVOS CAMPOS DE AGENDAMIENTO
+    scheduledDateTime: 'No aplica',
+    estimatedDuration: 'No aplica',
+    assignedTechnician: 'No asignado',
+    schedulingStatus: 'Cancelado',
+    // NUEVOS CAMPOS DE LLAMADAS
+    callCount: 3,
+    callHistory: [
+      {
+        date: '2023-06-04 11:40',
+        agent: 'María González',
+        result: 'Contactado',
+        comments: 'Cliente solicita migración a fibra óptica'
+      },
+      {
+        date: '2023-06-05 08:30',
+        agent: 'Carlos Rodríguez',
+        result: 'Negociación',
+        comments: 'Se informa que no hay cobertura de fibra'
+      },
+      {
+        date: '2023-06-05 09:30',
+        agent: 'Carlos Rodríguez',
+        result: 'Rechazado',
+        comments: 'Cliente no acepta alternativa de servicio'
+      }
+    ]
+  }
+};
+
+// Datos de historial para las órdenes
+const dealerOrderTimelineData = {
+  'ORD-001250': [
+    { date: '2023-06-10 10:30', area: 'Sistema', user: 'Sistema', content: 'Orden ingresada al sistema' },
+    { date: '2023-06-14 09:15', area: 'Atención al Cliente', user: 'María González', content: 'Orden derivada a Comercial: Negociación de condiciones' },
+    { date: '2023-06-14 10:00', area: 'Comercial', user: 'Carlos Rodríguez', content: 'Recepción de derivación: Se inicia negociación con cliente' }
+  ],
+  'ORD-001251': [
+    { date: '2023-06-09 14:20', area: 'Sistema', user: 'Sistema', content: 'Orden ingresada al sistema' },
+    { date: '2023-06-13 11:30', area: 'Atención al Cliente', user: 'María González', content: 'Orden derivada a Comercial: Información adicional requerida' },
+    { date: '2023-06-13 14:00', area: 'Comercial', user: 'Carlos Rodríguez', content: 'Recepción de derivación: Se contacta al cliente para obtener información' }
+  ],
+  'ORD-001252': [
+    { date: '2023-06-08 16:45', area: 'Sistema', user: 'Sistema', content: 'Orden ingresada al sistema' },
+    { date: '2023-06-12 09:20', area: 'Atención al Cliente', user: 'María González', content: 'Orden derivada a Comercial: Cliente no localizado' },
+    { date: '2023-06-12 10:30', area: 'Comercial', user: 'Carlos Rodríguez', content: 'Recepción de derivación: Se intenta localizar al cliente sin éxito' }
+  ],
+  'ORD-001253': [
+    { date: '2023-06-07 11:15', area: 'Sistema', user: 'Sistema', content: 'Orden ingresada al sistema' },
+    { date: '2023-06-11 10:45', area: 'Atención al Cliente', user: 'María González', content: 'Orden derivada a Comercial: Caso comercial especial' },
+    { date: '2023-06-11 14:00', area: 'Comercial', user: 'Carlos Rodríguez', content: 'Recepción de derivación: Se analiza caso especial del cliente' },
+    { date: '2023-06-12 15:45', area: 'Comercial', user: 'Carlos Rodríguez', content: 'Respuesta comercial: Aprobado con condiciones - Paquete premium con 15% de descuento por 6 meses' }
+  ],
+  'ORD-001254': [
+    { date: '2023-06-06 13:30', area: 'Sistema', user: 'Sistema', content: 'Orden ingresada al sistema' },
+    { date: '2023-06-10 09:40', area: 'Atención al Cliente', user: 'María González', content: 'Orden derivada a Comercial: Requiere autorización especial' },
+    { date: '2023-06-10 11:00', area: 'Comercial', user: 'Carlos Rodríguez', content: 'Recepción de derivación: Se solicita autorización para migración de servicio corporativo' },
+    { date: '2023-06-11 14:20', area: 'Comercial', user: 'Carlos Rodríguez', content: 'Respuesta comercial: Rechazado - Cliente no cumple requisitos' }
+  ],
+  // Nuevos historiales para órdenes pendientes
+  'ORD-001255': [
+    { date: '2023-06-13 09:20', area: 'Sistema', user: 'Sistema', content: 'Orden ingresada al sistema' },
+    { date: '2023-06-15 08:30', area: 'Atención al Cliente', user: 'María González', content: 'Intento de contacto con cliente sin respuesta' },
+    { date: '2023-06-15 09:20', area: 'Atención al Cliente', user: 'María González', content: 'Contacto con cliente: Se identifica que es empresa y requiere facturación con RUC' },
+    { date: '2023-06-15 09:45', area: 'Atención al Cliente', user: 'María González', content: 'Orden derivada a Comercial: Requiere autorización especial' }
+  ],
+  'ORD-001256': [
+    { date: '2023-06-12 14:15', area: 'Sistema', user: 'Sistema', content: 'Orden ingresada al sistema' },
+    { date: '2023-06-15 09:45', area: 'Atención al Cliente', user: 'María González', content: 'Intento de contacto con cliente VIP sin respuesta' },
+    { date: '2023-06-15 10:30', area: 'Atención al Cliente', user: 'María González', content: 'Contacto con cliente VIP: Solicita beneficios adicionales por antigüedad' },
+    { date: '2023-06-15 11:00', area: 'Atención al Cliente', user: 'María González', content: 'Negociación con cliente: Insiste en upgrade sin costo' },
+    { date: '2023-06-15 11:10', area: 'Atención al Cliente', user: 'María González', content: 'Orden derivada a Comercial: Cliente VIP solicita beneficios adicionales' }
+  ],
+  'ORD-001257': [
+    { date: '2023-06-12 10:30', area: 'Sistema', user: 'Sistema', content: 'Orden ingresada al sistema' },
+    { date: '2023-06-14 14:00', area: 'Atención al Cliente', user: 'María González', content: 'Contacto con cliente: Reporta cargos no reconocidos en factura' },
+    { date: '2023-06-14 14:45', area: 'Atención al Cliente', user: 'María González', content: 'Recepción de comprobantes: Cliente envía evidencia de pagos' },
+    { date: '2023-06-14 15:20', area: 'Atención al Cliente', user: 'María González', content: 'Orden derivada a Comercial: Problemas con facturación' }
+  ],
+  'ORD-001258': [
+    { date: '2023-06-11 16:20', area: 'Sistema', user: 'Sistema', content: 'Orden ingresada al sistema' },
+    { date: '2023-06-14 15:45', area: 'Atención al Cliente', user: 'María González', content: 'Contacto con cliente: Informa que se mudó y necesita cambiar dirección' },
+    { date: '2023-06-14 16:30', area: 'Atención al Cliente', user: 'María González', content: 'Orden derivada a Comercial: Cambio de dirección de instalación' }
+  ],
+  'ORD-001259': [
+    { date: '2023-06-10 11:45', area: 'Sistema', user: 'Sistema', content: 'Orden ingresada al sistema' },
+    { date: '2023-06-13 16:45', area: 'Atención al Cliente', user: 'María González', content: 'Contacto con cliente: Interesada en paquetes promocionales para empresas' },
+    { date: '2023-06-13 17:15', area: 'Atención al Cliente', user: 'María González', content: 'Orden derivada a Comercial: Consulta sobre paquetes promocionales' }
+  ],
+  // Nuevos historiales para órdenes atendidas
+  'ORD-001260': [
+    { date: '2023-06-07 13:20', area: 'Sistema', user: 'Sistema', content: 'Orden ingresada al sistema' },
+    { date: '2023-06-09 14:20', area: 'Atención al Cliente', user: 'María González', content: 'Contacto con cliente: Solicita instalación en zona de cobertura limitada' },
+    { date: '2023-06-10 10:15', area: 'Comercial', user: 'Carlos Rodríguez', content: 'Coordinación de visita técnica para verificar cobertura' },
+    { date: '2023-06-10 16:30', area: 'Comercial', user: 'Carlos Rodríguez', content: 'Respuesta comercial: Aprobado - Se confirma cobertura en la zona' }
+  ],
+  'ORD-001261': [
+    { date: '2023-06-05 09:30', area: 'Sistema', user: 'Sistema', content: 'Orden ingresada al sistema' },
+    { date: '2023-06-08 10:30', area: 'Atención al Cliente', user: 'María González', content: 'Contacto con cliente: Reporta múltiples intentos de reparación fallidos' },
+    { date: '2023-06-08 15:45', area: 'Atención al Cliente', user: 'María González', content: 'Reclamo de cliente: Molesto por falta de solución' },
+    { date: '2023-06-09 09:00', area: 'Comercial', user: 'Carlos Rodríguez', content: 'Negociación con cliente: Se ofrece compensación por inconvenientes' },
+    { date: '2023-06-09 11:15', area: 'Comercial', user: 'Carlos Rodríguez', content: 'Respuesta comercial: Aprobado con condiciones - Asignación de técnico especialista' }
+  ],
+  'ORD-001262': [
+    { date: '2023-06-04 14:10', area: 'Sistema', user: 'Sistema', content: 'Orden ingresada al sistema' },
+    { date: '2023-06-07 11:20', area: 'Atención al Cliente', user: 'María González', content: 'Contacto con cliente: Solicita cancelación por mala calidad del servicio' },
+    { date: '2023-06-08 10:30', area: 'Comercial', user: 'Carlos Rodríguez', content: 'Negociación con cliente: Se informa sobre contrato vigente' },
+    { date: '2023-06-08 14:45', area: 'Comercial', user: 'Carlos Rodríguez', content: 'Respuesta comercial: Rechazado - Cliente insiste en cancelación' }
+  ],
+  'ORD-001263': [
+    { date: '2023-06-03 16:45', area: 'Sistema', user: 'Sistema', content: 'Orden ingresada al sistema' },
+    { date: '2023-06-06 15:30', area: 'Atención al Cliente', user: 'María González', content: 'Contacto con cliente: Solicita downgrade de plan por situación económica' },
+    { date: '2023-06-07 10:20', area: 'Comercial', user: 'Carlos Rodríguez', content: 'Respuesta comercial: Aprobado con condiciones - Reducción temporal de costo' }
+  ],
+  'ORD-001264': [
+    { date: '2023-06-02 11:20', area: 'Sistema', user: 'Sistema', content: 'Orden ingresada al sistema' },
+    { date: '2023-06-05 14:15', area: 'Atención al Cliente', user: 'María González', content: 'Contacto con cliente: Requiere instalación especial en zona rural' },
+    { date: '2023-06-06 13:10', area: 'Comercial', user: 'Carlos Rodríguez', content: 'Respuesta comercial: Aprobado - Coordinación de instalación especial' }
+  ],
+  'ORD-001265': [
+    { date: '2023-06-01 10:15', area: 'Sistema', user: 'Sistema', content: 'Orden ingresada al sistema' },
+    { date: '2023-06-04 11:40', area: 'Atención al Cliente', user: 'María González', content: 'Contacto con cliente: Solicita migración a fibra óptica' },
+    { date: '2023-06-05 08:30', area: 'Comercial', user: 'Carlos Rodríguez', content: 'Negociación con cliente: Se informa que no hay cobertura de fibra' },
+    { date: '2023-06-05 09:30', area: 'Comercial', user: 'Carlos Rodríguez', content: 'Respuesta comercial: Rechazado - Cliente no acepta alternativa de servicio' }
+  ]
+};
+
+// Variable global para la orden actual del dealer
+let currentDealerOrderId = null;
+let currentPage = 'dealer-pendientes';
+
+// Función para cambiar a página del dealer
+function changeDealerPage(page) {
+  // Ocultar todas las páginas
+  document.querySelectorAll('.page-content').forEach(p => {
+    p.style.display = 'none';
+  });
+
+  // Mostrar la página seleccionada
+  document.getElementById(`${page}-page`).style.display = 'block';
+
+  // Actualizar el menú activo
+  document.querySelectorAll('.menu-item').forEach(item => {
+    item.classList.remove('active');
+  });
+  document.querySelector(`.menu-item[data-page="${page}"]`).classList.add('active');
+
+  // Actualizar la página actual
+  currentPage = page;
+
+  // Actualizar el título y contenido según la página
+  updateDealerPageContent(page);
+
+  // Cargar datos según la página
+  if (page === 'dealer-pendientes') {
+    checkDealerPendingAlerts();
+  } else if (page === 'dealer-atendidos') {
+    checkDealerAttendedAlerts();
+  } else if (page === 'dealer-buscador') {
+    // Limpiar formulario de búsqueda
+    document.getElementById('orderSearch').value = '';
+    document.getElementById('orderStatusFilter').value = '';
+    document.getElementById('searchResults').style.display = 'none';
+    document.getElementById('noResultsMessage').style.display = 'none';
+  }
+}
+
+// Función para actualizar el contenido de la página del dealer
+function updateDealerPageContent(page) {
+  const titles = {
+    'dealer-pendientes': 'Bandeja Pendientes - Órdenes por Responder',
+    'dealer-atendidos': 'Bandeja Atendidos - Órdenes Respondidas',
+    'dealer-buscador': 'Buscador de Órdenes - Seguimiento Completo'
+  };
+
+  const alertTexts = {
+    'dealer-pendientes': '<strong>Tienes órdenes pendientes de respuesta</strong>. Revisa y responde a la brevedad.',
+    'dealer-atendidos': '<strong>Órdenes atendidas recientemente</strong>. Revisa el estado actual.',
+    'dealer-buscador': '<strong>Busca cualquier orden</strong> por su número y verifica su trazabilidad completa.'
+  };
+
+  const stats = {
+    'dealer-pendientes': [
+      { icon: 'fas fa-clipboard-list', value: '12', label: 'Total órdenes', color: 'total' },
+      { icon: 'fas fa-exclamation-circle', value: '5', label: 'Urgentes', color: 'critical' },
+      { icon: 'fas fa-clock', value: '8', label: 'Pendientes', color: 'processing' }
+    ],
+    'dealer-atendidos': [
+      { icon: 'fas fa-clipboard-list', value: '18', label: 'Total órdenes', color: 'total' },
+      { icon: 'fas fa-check-circle', value: '12', label: 'Resueltas', color: 'completed' },
+      { icon: 'fas fa-reply', value: '6', label: 'En seguimiento', color: 'processing' }
+    ],
+    'dealer-buscador': [
+      { icon: 'fas fa-search', value: '245', label: 'Total órdenes', color: 'total' },
+      { icon: 'fas fa-check', value: '198', label: 'Resueltas', color: 'completed' },
+      { icon: 'fas fa-clock', value: '47', label: 'En proceso', color: 'processing' }
+    ]
+  };
+
+  // Actualizar título
+  document.getElementById('pageTitle').textContent = titles[page];
+
+  // Actualizar texto de alerta
+  document.getElementById('alertText').innerHTML = alertTexts[page];
+
+  // Cambiar el texto del botón según la página
+  const criticalOrdersBtn = document.getElementById('criticalOrdersBtn');
+  if (page === 'dealer-pendientes') {
+    criticalOrdersBtn.textContent = 'Ver órdenes pendientes';
+  } else if (page === 'dealer-atendidos') {
+    criticalOrdersBtn.textContent = 'Ver órdenes atendidas';
+  } else {
+    criticalOrdersBtn.textContent = 'Buscar órdenes';
+  }
+
+  // Actualizar estadísticas
+  const statsContainer = document.getElementById('statsContainer');
+  statsContainer.innerHTML = '';
+
+  stats[page].forEach(stat => {
+    const statCard = document.createElement('div');
+    statCard.className = 'stat-card';
+    statCard.innerHTML = `
+      <div class="stat-icon ${stat.color}">
+        <i class="${stat.icon}"></i>
+      </div>
+      <div class="stat-content">
+        <h3>${stat.value}</h3>
+        <p>${stat.label}</p>
+      </div>
+    `;
+    statsContainer.appendChild(statCard);
+  });
+}
+
+// Función para ver detalle de orden pendiente (Dealer)
+function viewDealerPendingOrderDetail(orderId) {
+  currentDealerOrderId = orderId;
+  const order = dealerOrdersData[orderId];
+
+  if (order) {
+    // Datos generales
+    document.getElementById('dealerPendingDetailOrderId').textContent = orderId;
+    document.getElementById('dealerPendingDetailCustomer').textContent = order.customer;
+    document.getElementById('dealerPendingDetailAddress').textContent = order.address;
+    document.getElementById('dealerPendingDetailPhone').textContent = order.phone;
+    document.getElementById('dealerPendingDetailServiceType').textContent = order.serviceType;
+    document.getElementById('dealerPendingDetailOFSCDate').textContent = order.ofscDate;
+    document.getElementById('dealerPendingDetailPriority').textContent = order.priority;
+    document.getElementById('dealerPendingDetailStatus').textContent = order.currentStatus;
+
+    // Datos de derivación
+    document.getElementById('dealerPendingDetailDerivationDate').textContent = order.derivationDate;
+    document.getElementById('dealerPendingDetailDerivationUser').textContent = order.derivationUser;
+    document.getElementById('dealerPendingDetailDerivationReason').textContent = order.derivationReason;
+    document.getElementById('dealerPendingDetailDerivationComments').textContent = order.derivationComments;
+    document.getElementById('dealerPendingDetailOriginArea').textContent = order.originArea;
+
+    // Cargar trazabilidad
+    loadDealerPendingOrderTimeline(orderId);
+
+    document.getElementById('dealerPendingOrderDetailModal').style.display = 'flex';
+  }
+}
+
+// Función para cargar la trazabilidad de la orden pendiente
+function loadDealerPendingOrderTimeline(orderId) {
+  const timeline = document.getElementById('dealerPendingOrderTimeline');
+  timeline.innerHTML = '';
+
+  // Usar los datos específicos para la orden
+  const timelineData = dealerOrderTimelineData[orderId] || [];
+  
+  if (timelineData.length > 0) {
+    timelineData.forEach(item => {
+      const timelineItem = document.createElement('div');
+      timelineItem.className = 'timeline-item';
+      timelineItem.innerHTML = `
+        <div class="timeline-date">${item.date}</div>
+        <div class="timeline-area">${item.area}</div>
+        <div class="timeline-user">Usuario: ${item.user}</div>
+        <div class="timeline-content">${item.content}</div>
+      `;
+      timeline.appendChild(timelineItem);
+    });
+  } else {
+    // Mostrar mensaje si no hay datos
+    const noDataItem = document.createElement('div');
+    noDataItem.className = 'timeline-item';
+    noDataItem.innerHTML = `
+      <div class="timeline-content" style="text-align: center; color: var(--gray-500);">
+        No hay historial disponible para esta orden
+      </div>
+    `;
+    timeline.appendChild(noDataItem);
+  }
+}
+
+// Función para mostrar modal de respuesta (Dealer)
+function showDealerResponseModal() {
+  if (!currentDealerOrderId) return;
+  
+  const order = dealerOrdersData[currentDealerOrderId];
+  
+  if (order) {
+    document.getElementById('dealerResponseOrderId').textContent = currentDealerOrderId;
+    document.getElementById('dealerResponseCustomer').textContent = order.customer;
+    document.getElementById('dealerResponseAddress').textContent = order.address;
+    document.getElementById('dealerResponseDerivationReason').textContent = order.derivationReason;
+    
+    // Resetear formulario
+    document.getElementById('dealerResponseResult').value = '';
+    document.getElementById('dealerResponseAction').value = '';
+    document.getElementById('dealerResponseComments').value = '';
+    document.getElementById('dealerResponseNextStep').value = '';
+    
+    document.getElementById('dealerResponseModal').style.display = 'flex';
+  }
+}
+
+// Función para guardar respuesta del dealer
+function saveDealerResponse() {
+  const orderId = document.getElementById('dealerResponseOrderId').textContent;
+  const result = document.getElementById('dealerResponseResult').value;
+  const action = document.getElementById('dealerResponseAction').value;
+  const comments = document.getElementById('dealerResponseComments').value;
+  const nextStep = document.getElementById('dealerResponseNextStep').value;
+
+  if (!result || !action || !nextStep) {
+    alert('Por favor complete todos los campos obligatorios');
+    return;
+  }
+
+  // Actualizar datos de la orden
+  const order = dealerOrdersData[orderId];
+  if (order) {
+    order.status = 'responded';
+    order.responseDate = new Date().toLocaleString('es-ES');
+    order.responseUser = 'Carlos Rodríguez';
+    order.responseResult = getResultText(result);
+    order.responseAction = getActionText(action);
+    order.responseComments = comments;
+    order.responseNextStep = getNextStepText(nextStep);
+    
+    // Actualizar estado actual según la acción
+    if (nextStep === 'back-to-agendadora') {
+      order.currentStatus = 'Devuelta a agendadora';
+      order.currentResponsible = 'María González (Agendadora)';
+    } else if (nextStep === 'assign-technician') {
+      order.currentStatus = 'Asignada a técnico';
+      order.currentResponsible = 'Por asignar';
+    } else if (nextStep === 'schedule-visit') {
+      order.currentStatus = 'Pendiente de agendamiento';
+      order.currentResponsible = 'María González (Agendadora)';
+    } else if (nextStep === 'contact-client') {
+      order.currentStatus = 'Pendiente de contacto con cliente';
+      order.currentResponsible = 'Carlos Rodríguez (Dealer)';
+    }
+    
+    order.lastUpdate = new Date().toLocaleString('es-ES');
+    
+    // Agregar evento a la trazabilidad
+    addTimelineEvent(orderId, 'Comercial', 'Carlos Rodríguez', `Respuesta enviada: ${order.responseResult} - ${order.responseAction}. ${comments}`);
+    
+    alert(`Respuesta enviada correctamente para la orden ${orderId}.`);
+    
+    closeModal('dealerResponseModal');
+    closeModal('dealerPendingOrderDetailModal');
+    
+    // Recargar las listas
+    if (currentPage === 'dealer-pendientes') {
+      checkDealerPendingAlerts();
+    } else if (currentPage === 'dealer-atendidos') {
+      checkDealerAttendedAlerts();
+    }
+    
+    // Si estamos en la página pendientes, mover la orden a atendidos
+    if (currentPage === 'dealer-pendientes') {
+      moveOrderToAttended(orderId);
+    }
+  }
+}
+
+// Funciones auxiliares para obtener textos
+function getResultText(result) {
+  const resultTexts = {
+    'approved': 'Aprobado',
+    'approved-conditions': 'Aprobado con condiciones',
+    'rejected': 'Rechazado',
+    'info-required': 'Requiere más información',
+    'negotiation': 'Requiere negociación',
+    'transfer': 'Transferir a otro área'
+  };
+  return resultTexts[result] || result;
+}
+
+function getActionText(action) {
+  const actionTexts = {
+    'continue': 'Continuar con la orden',
+    'reschedule': 'Reprogramar visita',
+    'cancel': 'Cancelar orden',
+    'change-service': 'Cambiar tipo de servicio',
+    'additional-info': 'Solicitar información adicional'
+  };
+  return actionTexts[action] || action;
+}
+
+function getNextStepText(nextStep) {
+  const nextStepTexts = {
+    'back-to-agendadora': 'Devolver a agendadora',
+    'assign-technician': 'Asignar técnico',
+    'schedule-visit': 'Agendar visita',
+    'contact-client': 'Contactar cliente'
+  };
+  return nextStepTexts[nextStep] || nextStep;
+}
+
+// Función para mover orden de pendientes a atendidos
+function moveOrderToAttended(orderId) {
+  const order = dealerOrdersData[orderId];
+  if (order && order.status === 'responded') {
+    // Eliminar de la tabla de pendientes
+    const pendingRows = document.querySelectorAll('#dealerPendientesTableBody .order-row');
+    pendingRows.forEach(row => {
+      if (row.querySelector('.order-id').textContent === orderId) {
+        row.remove();
+      }
+    });
+    
+    // Agregar a la tabla de atendidos
+    const attendedTableBody = document.getElementById('dealerAtendidosTableBody');
+    const newRow = document.createElement('tr');
+    newRow.className = 'order-row';
+    newRow.setAttribute('data-response-date', order.responseDate);
+    
+    newRow.innerHTML = `
+      <td class="order-id">${orderId}</td>
+      <td>${order.customer}</td>
+      <td>${order.responseDate}</td>
+      <td><span class="status-badge status-${order.responseResult.includes('Aprobado') ? 'validated' : 'failed'}">${order.responseResult}</span></td>
+      <td>${order.responseAction}</td>
+      <td>
+        <div class="actions">
+          <button class="action-btn primary" onclick="viewDealerAttendedOrderDetail('${orderId}')">
+            <i class="fas fa-eye"></i>
+          </button>
+        </div>
+      </td>
+    `;
+    
+    attendedTableBody.appendChild(newRow);
+  }
+}
+
+// Función para ver detalle de orden atendida (Dealer)
+function viewDealerAttendedOrderDetail(orderId) {
+  currentDealerOrderId = orderId;
+  const order = dealerOrdersData[orderId];
+
+  if (order) {
+    // Datos generales
+    document.getElementById('dealerAttendedDetailOrderId').textContent = orderId;
+    document.getElementById('dealerAttendedDetailCustomer').textContent = order.customer;
+    document.getElementById('dealerAttendedDetailAddress').textContent = order.address;
+    document.getElementById('dealerAttendedDetailPhone').textContent = order.phone;
+    document.getElementById('dealerAttendedDetailServiceType').textContent = order.serviceType;
+
+    // Mi respuesta
+    document.getElementById('dealerAttendedDetailResponseDate').textContent = order.responseDate;
+    document.getElementById('dealerAttendedDetailResponseResult').textContent = order.responseResult;
+    document.getElementById('dealerAttendedDetailResponseAction').textContent = order.responseAction;
+    document.getElementById('dealerAttendedDetailResponseComments').textContent = order.responseComments;
+    document.getElementById('dealerAttendedDetailResponseNextStep').textContent = order.responseNextStep;
+
+    // Estado actual
+    document.getElementById('dealerAttendedDetailCurrentStatus').textContent = order.currentStatus;
+    document.getElementById('dealerAttendedDetailLastUpdate').textContent = order.lastUpdate;
+    document.getElementById('dealerAttendedDetailCurrentResponsible').textContent = order.currentResponsible;
+    document.getElementById('dealerAttendedDetailNextAction').textContent = order.nextAction;
+
+    // Cargar trazabilidad
+    loadDealerAttendedOrderTimeline(orderId);
+
+    document.getElementById('dealerAttendedOrderDetailModal').style.display = 'flex';
+  }
+}
+
+// Función para cargar la trazabilidad de la orden atendida
+function loadDealerAttendedOrderTimeline(orderId) {
+  const timeline = document.getElementById('dealerAttendedOrderTimeline');
+  timeline.innerHTML = '';
+
+  // Combinar el historial de derivación con las respuestas
+  const timelineData = [...(dealerOrderTimelineData[orderId] || [])];
+  
+  // Agregar evento de respuesta
+  const order = dealerOrdersData[orderId];
+  if (order && order.responseDate) {
+    timelineData.push({
+      date: order.responseDate,
+      area: 'Comercial',
+      user: order.responseUser,
+      content: `Respuesta enviada: ${order.responseResult} - ${order.responseAction}`
+    });
+  }
+  
+  // Ordenar por fecha
+  timelineData.sort((a, b) => new Date(a.date) - new Date(b.date));
+  
+  if (timelineData.length > 0) {
+    timelineData.forEach(item => {
+      const timelineItem = document.createElement('div');
+      timelineItem.className = 'timeline-item';
+      timelineItem.innerHTML = `
+        <div class="timeline-date">${item.date}</div>
+        <div class="timeline-area">${item.area}</div>
+        <div class="timeline-user">Usuario: ${item.user}</div>
+        <div class="timeline-content">${item.content}</div>
+      `;
+      timeline.appendChild(timelineItem);
+    });
+  } else {
+    // Mostrar mensaje si no hay datos
+    const noDataItem = document.createElement('div');
+    noDataItem.className = 'timeline-item';
+    noDataItem.innerHTML = `
+      <div class="timeline-content" style="text-align: center; color: var(--gray-500);">
+        No hay historial disponible para esta orden
+      </div>
+    `;
+    timeline.appendChild(noDataItem);
+  }
+}
+
+// Función para cambiar pestaña en detalle de orden pendiente (Dealer)
+function switchDealerTab(tabName) {
+  // Ocultar todas las pestañas
+  const tabs = document.querySelectorAll('#dealerPendingOrderDetailModal .detail-tab');
+  tabs.forEach(tab => tab.classList.remove('active'));
+
+  const contents = document.querySelectorAll('#dealerPendingOrderDetailModal .detail-content');
+  contents.forEach(content => content.classList.remove('active'));
+
+  // Mostrar la pestaña seleccionada
+  let tabIndex = 0;
+  if (tabName === 'general') tabIndex = 0;
+  else if (tabName === 'derivation') tabIndex = 1;
+  else if (tabName === 'history') tabIndex = 2;
+
+  document.querySelectorAll('#dealerPendingOrderDetailModal .detail-tab')[tabIndex].classList.add('active');
+  document.getElementById(`dealer-${tabName}-tab`).classList.add('active');
+}
+
+// Función para cambiar pestaña en detalle de orden atendida (Dealer)
+function switchDealerAttendedTab(tabName) {
+  // Ocultar todas las pestañas
+  const tabs = document.querySelectorAll('#dealerAttendedOrderDetailModal .detail-tab');
+  tabs.forEach(tab => tab.classList.remove('active'));
+
+  const contents = document.querySelectorAll('#dealerAttendedOrderDetailModal .detail-content');
+  contents.forEach(content => content.classList.remove('active'));
+
+  // Mostrar la pestaña seleccionada
+  let tabIndex = 0;
+  if (tabName === 'general') tabIndex = 0;
+  else if (tabName === 'response') tabIndex = 1;
+  else if (tabName === 'history') tabIndex = 2;
+
+  document.querySelectorAll('#dealerAttendedOrderDetailModal .detail-tab')[tabIndex].classList.add('active');
+  document.getElementById(`dealer-attended-${tabName}-tab`).classList.add('active');
+}
+
+// Función para verificar alertas de órdenes pendientes (Dealer)
+function checkDealerPendingAlerts() {
+  const pendingOrders = Object.values(dealerOrdersData).filter(order => order.status === 'pending');
+  
+  if (pendingOrders.length > 0) {
+    document.getElementById('pendingDealerAlert').style.display = 'flex';
+    document.getElementById('pendingDealerCount').textContent = pendingOrders.length;
+  } else {
+    document.getElementById('pendingDealerAlert').style.display = 'none';
+  }
+}
+
+// Función para verificar alertas de órdenes atendidas (Dealer)
+function checkDealerAttendedAlerts() {
+  const attendedOrders = Object.values(dealerOrdersData).filter(order => order.status === 'responded');
+  
+  // Contar órdenes atendidas en las últimas 24 horas
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  
+  const recentAttendedOrders = attendedOrders.filter(order => {
+    const responseDate = new Date(order.responseDate);
+    return responseDate >= yesterday;
+  });
+  
+  if (recentAttendedOrders.length > 0) {
+    document.getElementById('recentDealerAlert').style.display = 'flex';
+    document.getElementById('recentDealerCount').textContent = recentAttendedOrders.length;
+  } else {
+    document.getElementById('recentDealerAlert').style.display = 'none';
+  }
+}
+
+// Función para ver órdenes pendientes
+document.getElementById('viewPendingDealerBtn').addEventListener('click', function() {
+  // Activar el botón de filtro todas
+  const filterButtons = document.querySelectorAll('#dealer-pendientes-page .filter-btn');
+  filterButtons.forEach(btn => btn.classList.remove('active'));
+  document.querySelector('.filter-btn[onclick="filterDealerOrders(\'all\', \'pendientes\')"]').classList.add('active');
+
+  // Filtrar todas las órdenes
+  const rows = document.querySelectorAll('#dealerPendientesTableBody .order-row');
+  rows.forEach(row => {
+    row.style.display = '';
+  });
+
+  // Scroll hasta la tabla
+  document.querySelector('#dealer-pendientes-page .main-content').scrollIntoView({ behavior: 'smooth' });
+});
+
+// Función para ver órdenes recientemente atendidas
+document.getElementById('viewRecentDealerBtn').addEventListener('click', function() {
+  // Activar el botón de filtro recientes
+  const filterButtons = document.querySelectorAll('#dealer-atendidos-page .filter-btn');
+  filterButtons.forEach(btn => btn.classList.remove('active'));
+  document.querySelector('.filter-btn[onclick="filterDealerOrders(\'recent\', \'atendidos\')"]').classList.add('active');
+
+  // Filtrar las órdenes recientes
+  const rows = document.querySelectorAll('#dealerAtendidosTableBody .order-row');
+  rows.forEach(row => {
+    const responseDate = new Date(row.getAttribute('data-response-date'));
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    if (responseDate >= yesterday) {
+      row.style.display = '';
+    } else {
+      row.style.display = 'none';
+    }
+  });
+
+  // Scroll hasta la tabla
+  document.querySelector('#dealer-atendidos-page .main-content').scrollIntoView({ behavior: 'smooth' });
+});
+
+// Función para filtrar órdenes del dealer
+function filterDealerOrders(filter, page) {
+  const buttons = document.querySelectorAll('.filter-btn');
+  buttons.forEach(btn => btn.classList.remove('active'));
+  event.target.classList.add('active');
+
+  if (page === 'pendientes') {
+    const rows = document.querySelectorAll('#dealerPendientesTableBody .order-row');
+    
+    rows.forEach(row => {
+      const priority = row.getAttribute('data-priority');
+      const derivationDate = row.getAttribute('data-derivation-date');
+      const orderId = row.querySelector('.order-id').textContent;
+      const order = dealerOrdersData[orderId];
+
+      if (filter === 'all') {
+        row.style.display = '';
+      } else if (filter === 'urgent' && priority === 'alta') {
+        row.style.display = '';
+      } else if (filter === 'today' && order.derivationDate === new Date().toISOString().split('T')[0]) {
+        row.style.display = '';
+      } else {
+        row.style.display = 'none';
+      }
+    });
+  } else if (page === 'atendidos') {
+    const rows = document.querySelectorAll('#dealerAtendidosTableBody .order-row');
+    
+    rows.forEach(row => {
+      const responseDate = row.getAttribute('data-response-date');
+      const orderId = row.querySelector('.order-id').textContent;
+      const order = dealerOrdersData[orderId];
+
+      if (filter === 'all') {
+        row.style.display = '';
+      } else if (filter === 'recent') {
+        const orderDate = new Date(responseDate);
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        
+        if (orderDate >= yesterday) {
+          row.style.display = '';
+        } else {
+          row.style.display = 'none';
+        }
+      } else if (filter === 'resolved' && order.currentStatus.includes('Resuelta')) {
+        row.style.display = '';
+      } else {
+        row.style.display = 'none';
+      }
+    });
+  }
+}
+
+// Función para buscar órdenes
+function searchOrder() {
+  const searchTerm = document.getElementById('orderSearch').value.trim();
+  const statusFilter = document.getElementById('orderStatusFilter').value;
+  
+  if (!searchTerm) {
+    alert('Por favor ingrese un número de orden');
+    return;
+  }
+  
+  // Buscar en los datos de órdenes del dealer
+  const matchingOrders = Object.entries(dealerOrdersData).filter(([id, order]) => {
+    return id.toLowerCase().includes(searchTerm.toLowerCase()) && 
+           (statusFilter === '' || order.status === statusFilter);
+  });
+  
+  // Mostrar resultados
+  const searchResults = document.getElementById('searchResults');
+  const noResultsMessage = document.getElementById('noResultsMessage');
+  const tableBody = document.getElementById('searchResultsTableBody');
+  
+  tableBody.innerHTML = '';
+  
+  if (matchingOrders.length > 0) {
+    searchResults.style.display = 'block';
+    noResultsMessage.style.display = 'none';
+    
+    matchingOrders.forEach(([id, order]) => {
+      const row = document.createElement('tr');
+      row.className = 'order-row';
+      
+      // Determinar el estado para mostrar
+      let statusText = order.status;
+      if (order.status === 'pending') statusText = 'Pendiente';
+      else if (order.status === 'responded') statusText = 'Atendido';
+      
+      row.innerHTML = `
+        <td class="order-id">${id}</td>
+        <td>${order.customer}</td>
+        <td><span class="status-badge status-${order.status}">${statusText}</span></td>
+        <td>${order.lastUpdate || order.responseDate || order.derivationDate || '-'}</td>
+        <td>
+          <div class="actions">
+            <button class="action-btn primary" onclick="viewSearchedOrderDetail('${id}')">
+              <i class="fas fa-eye"></i>
+            </button>
+          </div>
+        </td>
+      `;
+      
+      tableBody.appendChild(row);
+    });
+  } else {
+    searchResults.style.display = 'none';
+    noResultsMessage.style.display = 'block';
+  }
+}
+
+// Función para ver detalle de orden buscada
+function viewSearchedOrderDetail(orderId) {
+  const order = dealerOrdersData[orderId];
+  
+  if (order) {
+    // Datos generales
+    document.getElementById('searchDetailOrderId').textContent = orderId;
+    document.getElementById('searchDetailCustomer').textContent = order.customer;
+    document.getElementById('searchDetailAddress').textContent = order.address;
+    document.getElementById('searchDetailPhone').textContent = order.phone || '-';
+    document.getElementById('searchDetailServiceType').textContent = order.serviceType;
+    
+    // Determinar el estado para mostrar
+    let statusText = order.status;
+    if (order.status === 'pending') statusText = 'Pendiente';
+    else if (order.status === 'responded') statusText = 'Atendido';
+    
+    document.getElementById('searchDetailStatus').textContent = statusText;
+    document.getElementById('searchDetailCreationDate').textContent = order.ofscDate || '-';
+    document.getElementById('searchDetailLastUpdate').textContent = order.lastUpdate || order.responseDate || order.derivationDate || '-';
+    
+    // Cargar trazabilidad
+    loadSearchedOrderTracking(orderId);
+    
+    document.getElementById('searchOrderDetailModal').style.display = 'flex';
+  }
+}
+
+// Función para cargar trazabilidad de orden buscada
+function loadSearchedOrderTracking(orderId) {
+  const order = dealerOrdersData[orderId];
+  
+  if (!order) return;
+  
+  // Actualizar información de agendamiento
+  document.getElementById('searchScheduledDateTime').textContent = order.scheduledDateTime || 'No agendado';
+  document.getElementById('searchEstimatedDuration').textContent = order.estimatedDuration || 'No especificado';
+  document.getElementById('searchAssignedTechnician').textContent = order.assignedTechnician || 'No asignado';
+  document.getElementById('searchSchedulingStatus').textContent = order.schedulingStatus || 'Pendiente';
+  
+  // Cargar historial de llamadas con el nuevo diseño
+  loadSearchedOrderCalls(orderId);
+  
+  // Cargar línea de tiempo de trazabilidad
+  const timeline = document.getElementById('searchTrackingTimeline');
+  timeline.innerHTML = '';
+  
+  const timelineData = dealerOrderTimelineData[orderId] || [];
+  
+  if (timelineData.length > 0) {
+    timelineData.forEach(item => {
+      const timelineItem = document.createElement('div');
+      timelineItem.className = 'timeline-item';
+      timelineItem.innerHTML = `
+        <div class="timeline-date">${item.date}</div>
+        <div class="timeline-area">${item.area}</div>
+        <div class="timeline-user">Usuario: ${item.user}</div>
+        <div class="timeline-content">${item.content}</div>
+      `;
+      timeline.appendChild(timelineItem);
+    });
+  } else {
+    // Mostrar mensaje si no hay datos
+    const noDataItem = document.createElement('div');
+    noDataItem.className = 'timeline-item';
+    noDataItem.innerHTML = `
+      <div class="timeline-content" style="text-align: center; color: var(--gray-500);">
+        No hay datos de trazabilidad disponibles
+      </div>
+    `;
+    timeline.appendChild(noDataItem);
+  }
+}
+
+// Función para cargar el historial de llamadas con el nuevo diseño
+function loadSearchedOrderCalls(orderId) {
+  const order = dealerOrdersData[orderId];
+  
+  if (!order) return;
+  
+  const callsList = document.getElementById('searchCallsList');
+  callsList.innerHTML = '';
+  
+  if (order.callHistory && order.callHistory.length > 0) {
+    order.callHistory.forEach((call, index) => {
+      const callItem = document.createElement('div');
+      callItem.className = 'call-attempt-item';
+      callItem.innerHTML = `
+        <div class="call-attempt-info">
+          <div class="call-attempt-date">${call.date}</div>
+          <div class="call-attempt-result">Resultado: ${call.result}</div>
+          <div class="call-attempt-comments">Agente: ${call.agent}</div>
+          ${call.comments ? `<div class="call-attempt-comments">${call.comments}</div>` : ''}
+        </div>
+        <div class="call-attempt-actions">
+          <button class="call-attempt-action" title="Ver detalles" onclick="viewCallAttemptDetails('${orderId}', ${index})">
+            <i class="fas fa-eye"></i>
+          </button>
+        </div>
+      `;
+      callsList.appendChild(callItem);
+    });
+  } else {
+    // Mostrar mensaje si no hay datos de llamadas
+    const noCallsItem = document.createElement('div');
+    noCallsItem.className = 'call-attempt-item';
+    noCallsItem.innerHTML = `
+      <div class="call-attempt-info">
+        <div class="call-attempt-comments" style="text-align: center; color: var(--gray-500);">
+          No hay llamadas registradas
+        </div>
+      </div>
+    `;
+    callsList.appendChild(noCallsItem);
+  }
+}
+
+// Función para ver detalles de un intento de llamada
+function viewCallAttemptDetails(orderId, callIndex) {
+  const order = dealerOrdersData[orderId];
+  
+  if (order && order.callHistory && order.callHistory[callIndex]) {
+    const call = order.callHistory[callIndex];
+    
+    // Crear un modal simple para mostrar los detalles
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.style.display = 'flex';
+    modal.innerHTML = `
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 class="modal-title">Detalles de Llamada</h3>
+          <button class="close-btn" onclick="this.closest('.modal').remove()">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="detail-row">
+            <div class="detail-label">Fecha y Hora:</div>
+            <div class="detail-value">${call.date}</div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-label">Agente:</div>
+            <div class="detail-value">${call.agent}</div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-label">Resultado:</div>
+            <div class="detail-value">${call.result}</div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-label">Comentarios:</div>
+            <div class="detail-value">${call.comments || 'Sin comentarios'}</div>
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn btn-primary" onclick="this.closest('.modal').remove()">Cerrar</button>
+          </div>
+        </div>
+      </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Cerrar modal al hacer clic fuera
+    modal.addEventListener('click', function(e) {
+      if (e.target === modal) {
+        modal.remove();
+      }
+    });
+  }
+}
+
+// Función para cambiar pestaña en detalle de orden buscada
+function switchSearchTab(tabName) {
+  // Ocultar todas las pestañas
+  const tabs = document.querySelectorAll('#searchOrderDetailModal .detail-tab');
+  tabs.forEach(tab => tab.classList.remove('active'));
+
+  const contents = document.querySelectorAll('#searchOrderDetailModal .detail-content');
+  contents.forEach(content => content.classList.remove('active'));
+
+  // Mostrar la pestaña seleccionada
+  let tabIndex = 0;
+  if (tabName === 'general') tabIndex = 0;
+  else if (tabName === 'scheduling') tabIndex = 1;
+  else if (tabName === 'calls') tabIndex = 2;
+  else if (tabName === 'history') tabIndex = 3;
+
+  document.querySelectorAll('#searchOrderDetailModal .detail-tab')[tabIndex].classList.add('active');
+  document.getElementById(`search-${tabName}-tab`).classList.add('active');
+}
+
+// Función para agregar evento a la trazabilidad
+function addTimelineEvent(orderId, area, user, content) {
+  if (!dealerOrderTimelineData[orderId]) {
+    dealerOrderTimelineData[orderId] = [];
+  }
+
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('es-ES');
+  const timeStr = now.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+
+  dealerOrderTimelineData[orderId].push({
+    date: `${dateStr} ${timeStr}`,
+    area: area,
+    user: user,
+    content: content
+  });
+}
+
+// Función para manejar la navegación del menú lateral del dealer
+document.querySelectorAll('.menu-item').forEach(item => {
+  item.addEventListener('click', function(e) {
+    e.preventDefault();
+    
+    // Obtener la página a mostrar
+    const page = this.getAttribute('data-page');
+    
+    // Cambiar a la página seleccionada
+    changeDealerPage(page);
+    
+    // Marcar el elemento del menú como activo
+    document.querySelectorAll('.menu-item').forEach(menuItem => {
+      menuItem.classList.remove('active');
+    });
+    this.classList.add('active');
+  });
+});
+
+// Función para manejar el botón de órdenes del dealer
+document.getElementById('criticalOrdersBtn').addEventListener('click', function() {
+  if (currentPage === 'dealer-pendientes') {
+    // Activar el botón de filtro todas
+    const filterButtons = document.querySelectorAll('#dealer-pendientes-page .filter-btn');
+    filterButtons.forEach(btn => btn.classList.remove('active'));
+    document.querySelector('.filter-btn[onclick="filterDealerOrders(\'all\', \'pendientes\')"]').classList.add('active');
+
+    // Filtrar todas las órdenes
+    const rows = document.querySelectorAll('#dealerPendientesTableBody .order-row');
+    rows.forEach(row => {
+      row.style.display = '';
+    });
+
+    // Scroll hasta la tabla
+    document.querySelector('#dealer-pendientes-page .main-content').scrollIntoView({ behavior: 'smooth' });
+  } else if (currentPage === 'dealer-atendidos') {
+    // Activar el botón de filtro todas
+    const filterButtons = document.querySelectorAll('#dealer-atendidos-page .filter-btn');
+    filterButtons.forEach(btn => btn.classList.remove('active'));
+    document.querySelector('.filter-btn[onclick="filterDealerOrders(\'all\', \'atendidos\')"]').classList.add('active');
+
+    // Filtrar todas las órdenes
+    const rows = document.querySelectorAll('#dealerAtendidosTableBody .order-row');
+    rows.forEach(row => {
+      row.style.display = '';
+    });
+
+    // Scroll hasta la tabla
+    document.querySelector('#dealer-atendidos-page .main-content').scrollIntoView({ behavior: 'smooth' });
+  } else if (currentPage === 'dealer-buscador') {
+    // Enfocar el campo de búsqueda
+    document.getElementById('orderSearch').focus();
+  }
+});
+
+// Función para alternar la visibilidad de los módulos del menú
+function toggleModule(moduleId) {
+  const moduleContent = document.getElementById(moduleId);
+  const moduleArrow = moduleContent.previousElementSibling.querySelector('.module-arrow');
+  
+  // Alternar la clase 'expanded' para mostrar/ocultar el contenido
+  moduleContent.classList.toggle('expanded');
+  
+  // Rotar la flecha
+  moduleArrow.classList.toggle('rotated');
+}
+
+// Función para cerrar modal
+function closeModal(modalId) {
+  document.getElementById(modalId).style.display = 'none';
+}
+
+// Función para mostrar modal de transferencia (placeholder)
+function showDealerTransferModal() {
+  alert('Función de transferencia en desarrollo. Esta característica estará disponible próximamente.');
+}
+
+// Inicializar la página
+document.addEventListener('DOMContentLoaded', function() {
+  // Mostrar la página pendientes por defecto
+  changeDealerPage('dealer-pendientes');
+  
+  // Verificar alertas iniciales
+  checkDealerPendingAlerts();
+  checkDealerAttendedAlerts();
+});
+
+// Cerrar modales al hacer clic fuera
+window.onclick = function(event) {
+  const modals = document.querySelectorAll('.modal');
+  modals.forEach(modal => {
+    if (event.target === modal) {
+      modal.style.display = 'none';
+    }
+  });
+}
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

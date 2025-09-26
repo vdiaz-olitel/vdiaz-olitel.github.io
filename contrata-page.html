@@ -1,0 +1,3453 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sistema de Gestión - Torre de Control</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+<style>
+/* Estilos base */
+* {
+margin: 0;
+padding: 0;
+box-sizing: border-box;
+font-family: 'Inter', sans-serif;
+}
+
+:root {
+/* Colores adaptados */
+--primary: #2563eb;
+--primary-dark: #1d4ed8;
+--secondary: #f97316;
+--secondary-dark: #ea580c;
+--danger: #ef4444;
+--warning: #f59e0b;
+--success: #10b981;
+--gray-50: #f9fafb;
+--gray-100: #f3f4f6;
+--gray-200: #e5e7eb;
+--gray-300: #d1d5db;
+--gray-400: #9ca3af;
+--gray-500: #6b7280;
+--gray-600: #4b5563;
+--gray-700: #374151;
+--gray-800: #1f2937;
+--gray-900: #111827;
+--v-theme-surface: 255, 255, 255;
+--header-bg: #1a3a5f;
+--header-text: #ffffff;
+--sidebar-bg: #f8fafc;
+--sidebar-border: #e2e8f0;
+--card-bg: #ffffff;
+--card-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+--table-header-bg: #f8fafc;
+--table-border: #e2e8f0;
+--btn-hover: #f1f5f9;
+--sidebar-width: 300px;
+--backlog-color: #8b5cf6;
+--tcp-color: #3b82f6;
+--cierre-color: #10b981;
+--finalizado-color: #6366f1;
+--tce-color: #f97316;
+}
+
+body {
+background-color: var(--gray-50);
+color: var(--gray-900);
+line-height: 1.6;
+display: flex;
+min-height: 100vh;
+}
+
+/* Sidebar Styles */
+.sidebar {
+width: var(--sidebar-width);
+background-color: rgb(47, 51, 73);
+color: var(--header-text);
+padding: 20px 0;
+display: flex;
+flex-direction: column;
+position: fixed;
+height: 100vh;
+overflow-y: auto;
+box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+z-index: 1000;
+}
+
+.sidebar-header {
+padding: 0 20px 30px;
+border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+margin-bottom: 20px;
+}
+
+.sidebar-title {
+font-size: 20px;
+font-weight: 700;
+display: flex;
+align-items: center;
+gap: 10px;
+}
+
+.sidebar-menu {
+flex: 1;
+}
+
+/* Estilos para módulos del menú */
+.menu-module {
+margin-bottom: 8px;
+}
+
+.module-title {
+display: flex;
+align-items: center;
+padding: 12px 20px;
+color: rgba(255, 255, 255, 0.9);
+font-weight: 600;
+cursor: pointer;
+transition: all 0.2s;
+border-left: 3px solid transparent;
+}
+
+.module-title:hover {
+background-color: rgba(255, 255, 255, 0.1);
+color: white;
+}
+
+.module-title i:first-child {
+width: 24px;
+margin-right: 12px;
+text-align: center;
+font-size: 18px;
+}
+
+.module-title span {
+flex: 1;
+}
+
+.module-arrow {
+font-size: 12px;
+transition: transform 0.3s;
+}
+
+.module-arrow.rotated {
+transform: rotate(180deg);
+}
+
+.module-content {
+max-height: 0;
+overflow: hidden;
+transition: max-height 0.3s ease-out;
+background-color: rgba(0, 0, 0, 0.1);
+}
+
+.module-content.expanded {
+max-height: 500px;
+}
+
+.module-content .menu-item {
+padding-left: 40px;
+font-size: 14px;
+}
+
+.menu-item {
+display: block;
+padding: 14px 20px;
+color: rgba(255, 255, 255, 0.8);
+text-decoration: none;
+transition: all 0.2s;
+font-weight: 500;
+border-left: 3px solid transparent;
+white-space: nowrap;
+overflow: hidden;
+text-overflow: ellipsis;
+}
+
+.menu-item:hover {
+background-color: rgba(255, 255, 255, 0.1);
+color: white;
+}
+
+.menu-item.active {
+background-color: rgba(255, 255, 255, 0.15);
+color: white;
+}
+
+.menu-item.active.confirmados {
+border-left-color: var(--success);
+}
+
+.menu-item.active.tce {
+border-left-color: var(--tce-color);
+}
+
+.menu-item i {
+width: 24px;
+margin-right: 15px;
+text-align: center;
+font-size: 18px;
+}
+
+.sidebar-footer {
+padding: 20px;
+border-top: 1px solid rgba(255, 255, 255, 0.1);
+font-size: 12px;
+color: rgba(255, 255, 255, 0.6);
+text-align: center;
+}
+
+/* Main Content */
+.main-container {
+flex: 1;
+margin-left: var(--sidebar-width);
+padding: 20px;
+display: flex;
+flex-direction: column;
+}
+
+.container {
+max-width: 1400px;
+margin: 0 auto;
+width: 100%;
+}
+
+header {
+background-color: rgb(var(--v-theme-surface));
+border-radius: 12px;
+padding: 24px;
+box-shadow: var(--card-shadow);
+margin-bottom: 24px;
+color: var(--header-text);
+}
+
+.header-top {
+display: flex;
+justify-content: space-between;
+align-items: center;
+margin-bottom: 20px;
+}
+
+.header-title {
+font-size: 28px;
+font-weight: 700;
+color: var(--header-text);
+}
+
+.user-info {
+display: flex;
+align-items: center;
+gap: 12px;
+}
+
+.user-avatar {
+width: 40px;
+height: 40px;
+border-radius: 50%;
+background-color: var(--primary);
+display: flex;
+align-items: center;
+justify-content: center;
+color: white;
+font-weight: 600;
+}
+
+.alert-banner {
+background-color: #fef3c7;
+border-left: 4px solid var(--warning);
+padding: 16px;
+border-radius: 8px;
+display: flex;
+align-items: center;
+gap: 12px;
+margin-bottom: 20px;
+}
+
+.alert-banner i {
+color: var(--warning);
+font-size: 20px;
+}
+
+.alert-text {
+font-weight: 500;
+color: var(--gray-800);
+}
+
+.alert-banner button {
+background-color: var(--warning);
+color: white;
+border: none;
+padding: 6px 12px;
+border-radius: 6px;
+font-weight: 500;
+cursor: pointer;
+margin-left: auto;
+transition: background-color 0.2s;
+}
+
+.alert-banner button:hover {
+background-color: #d97706;
+}
+
+.main-content {
+background-color: var(--card-bg);
+border-radius: 12px;
+box-shadow: var(--card-shadow);
+overflow: hidden;
+border: 1px solid var(--sidebar-border);
+}
+
+.table-header {
+background-color: var(--table-header-bg);
+padding: 20px 24px;
+border-bottom: 1px solid var(--table-border);
+display: flex;
+justify-content: space-between;
+align-items: center;
+}
+
+.table-title {
+font-size: 18px;
+font-weight: 600;
+color: var(--gray-900);
+}
+
+.filter-actions {
+display: flex;
+gap: 12px;
+}
+
+.filter-btn {
+background-color: var(--card-bg);
+border: 1px solid var(--sidebar-border);
+border-radius: 6px;
+padding: 8px 12px;
+display: flex;
+align-items: center;
+gap: 6px;
+cursor: pointer;
+font-size: 14px;
+color: var(--gray-700);
+transition: all 0.2s;
+}
+
+.filter-btn:hover {
+background-color: var(--btn-hover);
+}
+
+.filter-btn.active {
+background-color: var(--primary);
+color: white;
+border-color: var(--primary);
+}
+
+.orders-table {
+width: 100%;
+border-collapse: collapse;
+}
+
+.orders-table th {
+text-align: left;
+padding: 12px 24px;
+font-weight: 600;
+color: var(--gray-600);
+font-size: 14px;
+background-color: var(--table-header-bg);
+border-bottom: 1px solid var(--table-border);
+}
+
+.orders-table td {
+padding: 16px 24px;
+border-bottom: 1px solid var(--table-border);
+}
+
+.orders-table tr:hover {
+background-color: var(--btn-hover);
+}
+
+.order-id {
+font-weight: 600;
+color: var(--primary);
+}
+
+.status-badge {
+display: inline-block;
+padding: 4px 8px;
+border-radius: 4px;
+font-size: 12px;
+font-weight: 500;
+}
+
+.status-pending {
+background-color: rgba(245, 158, 11, 0.1);
+color: var(--warning);
+}
+
+.status-responded {
+background-color: rgba(37, 99, 235, 0.1);
+color: var(--primary);
+}
+
+.status-validated {
+background-color: rgba(16, 185, 129, 0.1);
+color: var(--success);
+}
+
+.status-completed {
+background-color: rgba(99, 102, 241, 0.1);
+color: var(--finalizado-color);
+}
+
+.status-failed {
+background-color: rgba(239, 68, 68, 0.1);
+color: var(--danger);
+}
+
+/* Estados específicos para TCE */
+.status-derived {
+background-color: rgba(249, 115, 22, 0.1);
+color: var(--tce-color);
+}
+
+.status-attended {
+background-color: rgba(37, 99, 235, 0.1);
+color: var(--primary);
+}
+
+.status-finalized {
+background-color: rgba(16, 185, 129, 0.1);
+color: var(--success);
+}
+
+.status-re-derived {
+background-color: rgba(139, 92, 246, 0.1);
+color: var(--backlog-color);
+}
+
+.actions {
+display: flex;
+justify-content: center;
+gap: 6px;
+}
+
+.action-btn {
+width: 32px;
+height: 32px;
+border-radius: 6px;
+border: none;
+background-color: var(--gray-100);
+color: var(--gray-600);
+cursor: pointer;
+display: flex;
+align-items: center;
+justify-content: center;
+transition: all 0.2s;
+}
+
+.action-btn:hover {
+background-color: var(--gray-200);
+}
+
+.action-btn.primary {
+background-color: var(--primary);
+color: white;
+}
+
+.action-btn.primary:hover {
+background-color: var(--primary-dark);
+}
+
+.action-btn.success {
+background-color: var(--success);
+color: white;
+}
+
+.action-btn.success:hover {
+background-color: #059669;
+}
+
+.action-btn.warning {
+background-color: var(--warning);
+color: white;
+}
+
+.action-btn.warning:hover {
+background-color: #d97706;
+}
+
+/* Modal Styles */
+.modal {
+display: none;
+position: fixed;
+z-index: 1000;
+left: 0;
+top: 0;
+width: 100%;
+height: 100%;
+background-color: rgba(0,0,0,0.5);
+align-items: center;
+justify-content: center;
+}
+
+.modal-content {
+background-color: var(--card-bg);
+border-radius: 12px;
+width: 90%;
+max-width: 800px;
+max-height: 80vh;
+overflow-y: auto;
+box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+border: 1px solid var(--sidebar-border);
+}
+
+.modal-header {
+padding: 20px 30px;
+border-bottom: 1px solid var(--table-border);
+display: flex;
+justify-content: space-between;
+align-items: center;
+background-color: var(--table-header-bg);
+}
+
+.modal-title {
+font-size: 20px;
+font-weight: 600;
+color: var(--gray-900);
+}
+
+.close-btn {
+background: none;
+border: none;
+font-size: 24px;
+color: var(--gray-500);
+cursor: pointer;
+}
+
+.modal-body {
+padding: 30px;
+}
+
+/* Estilos para las pestañas */
+.detail-tabs {
+display: flex;
+border-bottom: 1px solid var(--table-border);
+margin-bottom: 20px;
+flex-wrap: wrap;
+}
+
+.detail-tab {
+padding: 16px 24px;
+cursor: pointer;
+font-weight: 500;
+color: var(--gray-500);
+border-bottom: 2px solid transparent;
+transition: all 0.2s;
+white-space: nowrap;
+}
+
+.detail-tab.active {
+color: var(--primary);
+border-bottom-color: var(--primary);
+}
+
+.detail-content {
+display: none;
+}
+
+.detail-content.active {
+display: block;
+}
+
+/* Estilos para los detalles de la orden */
+.order-details-grid {
+display: grid;
+grid-template-columns: repeat(2, 1fr);
+gap: 20px;
+}
+
+.order-detail-group {
+margin-bottom: 20px;
+}
+
+.order-detail-group h4 {
+font-size: 16px;
+font-weight: 600;
+color: var(--gray-800);
+margin-bottom: 12px;
+padding-bottom: 8px;
+border-bottom: 1px solid var(--gray-200);
+}
+
+.order-detail-row {
+display: flex;
+margin-bottom: 12px;
+}
+
+.order-detail-label {
+width: 140px;
+font-weight: 500;
+color: var(--gray-600);
+}
+
+.order-detail-value {
+flex: 1;
+color: var(--gray-800);
+}
+
+/* Estilos para la sección de acciones */
+.contact-section {
+background-color: var(--btn-hover);
+border-radius: 8px;
+padding: 20px;
+margin-top: 20px;
+border: 1px solid var(--sidebar-border);
+}
+
+.contact-header {
+display: flex;
+justify-content: space-between;
+align-items: center;
+margin-bottom: 16px;
+}
+
+.contact-title {
+font-size: 16px;
+font-weight: 600;
+color: var(--gray-900);
+}
+
+.contact-status {
+font-size: 14px;
+padding: 4px 8px;
+border-radius: 4px;
+font-weight: 500;
+}
+
+.contact-status.pending {
+background-color: rgba(245, 158, 11, 0.1);
+color: var(--warning);
+}
+
+.contact-status.processing {
+background-color: rgba(37, 99, 235, 0.1);
+color: var(--primary);
+}
+
+.contact-status.completed {
+background-color: rgba(16, 185, 129, 0.1);
+color: var(--success);
+}
+
+.contact-actions {
+display: grid;
+grid-template-columns: repeat(2, 1fr);
+gap: 16px;
+}
+
+.contact-action-btn {
+display: flex;
+align-items: center;
+gap: 12px;
+padding: 16px;
+border-radius: 8px;
+border: 1px solid var(--sidebar-border);
+background-color: var(--card-bg);
+cursor: pointer;
+transition: all 0.2s;
+font-size: 14px;
+}
+
+.contact-action-btn:hover {
+transform: translateY(-2px);
+box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.contact-action-btn i {
+font-size: 24px;
+width: 30px;
+text-align: center;
+}
+
+.contact-action-btn.primary {
+border-left: 4px solid var(--primary);
+}
+
+.contact-action-btn.primary i {
+color: var(--primary);
+}
+
+.contact-action-btn.success {
+border-left: 4px solid var(--success);
+}
+
+.contact-action-btn.success i {
+color: var(--success);
+}
+
+.contact-action-btn.warning {
+border-left: 4px solid var(--warning);
+}
+
+.contact-action-btn.warning i {
+color: var(--warning);
+}
+
+.contact-action-btn.danger {
+border-left: 4px solid var(--danger);
+}
+
+.contact-action-btn.danger i {
+color: var(--danger);
+}
+
+.contact-action-btn.tce {
+border-left: 4px solid var(--tce-color);
+}
+
+.contact-action-btn.tce i {
+color: var(--tce-color);
+}
+
+.contact-action-btn.backlog {
+border-left: 4px solid var(--backlog-color);
+}
+
+.contact-action-btn.backlog i {
+color: var(--backlog-color);
+}
+
+.contact-action-content {
+flex: 1;
+}
+
+.contact-action-title {
+font-weight: 600;
+margin-bottom: 4px;
+color: var(--gray-900);
+}
+
+.contact-action-desc {
+font-size: 12px;
+color: var(--gray-500);
+}
+
+.form-group {
+margin-bottom: 20px;
+}
+
+.form-group label {
+display: block;
+margin-bottom: 8px;
+font-weight: 500;
+color: var(--gray-700);
+}
+
+.form-control {
+width: 100%;
+padding: 10px 14px;
+border: 1px solid var(--sidebar-border);
+border-radius: 6px;
+font-size: 14px;
+transition: border-color 0.2s;
+background-color: var(--card-bg);
+}
+
+.form-control:focus {
+outline: none;
+border-color: var(--primary);
+box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.form-actions {
+display: flex;
+justify-content: flex-end;
+gap: 12px;
+margin-top: 24px;
+}
+
+.btn {
+padding: 10px 16px;
+border-radius: 6px;
+font-weight: 500;
+cursor: pointer;
+border: none;
+font-size: 14px;
+transition: all 0.2s;
+}
+
+.btn-primary {
+background-color: var(--primary);
+color: white;
+}
+
+.btn-primary:hover {
+background-color: var(--primary-dark);
+}
+
+.btn-secondary {
+background-color: var(--card-bg);
+color: var(--gray-700);
+border: 1px solid var(--sidebar-border);
+}
+
+.btn-secondary:hover {
+background-color: var(--btn-hover);
+}
+
+.btn-danger {
+background-color: var(--danger);
+color: white;
+}
+
+.btn-danger:hover {
+background-color: #dc2626;
+}
+
+.btn-warning {
+background-color: var(--warning);
+color: white;
+}
+
+.btn-warning:hover {
+background-color: #d97706;
+}
+
+/* Página en desarrollo */
+.development-page {
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+padding: 60px 20px;
+text-align: center;
+}
+
+.development-icon {
+font-size: 64px;
+color: var(--gray-400);
+margin-bottom: 24px;
+}
+
+.development-title {
+font-size: 24px;
+font-weight: 600;
+color: var(--gray-700);
+margin-bottom: 12px;
+}
+
+.development-text {
+font-size: 16px;
+color: var(--gray-500);
+max-width: 500px;
+}
+
+/* Alerta específica para órdenes fuera de horario */
+.out-of-schedule-alert {
+background-color: rgba(239, 68, 68, 0.1);
+border-left: 4px solid var(--danger);
+}
+
+.out-of-schedule-alert i {
+color: var(--danger);
+}
+
+.out-of-schedule-alert button {
+background-color: var(--danger);
+}
+
+.out-of-schedule-alert button:hover {
+background-color: #dc2626;
+}
+
+/* Estilos para el input de archivo */
+.file-upload {
+position: relative;
+display: inline-block;
+cursor: pointer;
+width: 100%;
+}
+
+.file-upload input[type=file] {
+position: absolute;
+left: 0;
+top: 0;
+opacity: 0;
+width: 100%;
+height: 100%;
+cursor: pointer;
+}
+
+.file-upload-label {
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+padding: 20px;
+border: 2px dashed var(--gray-300);
+border-radius: 8px;
+background-color: var(--gray-50);
+transition: all 0.2s;
+}
+
+.file-upload-label:hover {
+border-color: var(--primary);
+background-color: rgba(37, 99, 235, 0.05);
+}
+
+.file-upload-icon {
+font-size: 32px;
+color: var(--gray-400);
+margin-bottom: 10px;
+}
+
+.file-upload-text {
+font-size: 14px;
+color: var(--gray-600);
+text-align: center;
+}
+
+.file-upload-filename {
+font-size: 14px;
+color: var(--primary);
+font-weight: 500;
+margin-top: 8px;
+}
+
+/* Estilos para el timeline - Actualizados con el diseño del dealer */
+.timeline {
+position: relative;
+padding-left: 30px;
+margin-top: 20px;
+}
+
+.timeline::before {
+content: '';
+position: absolute;
+left: 8px;
+top: 0;
+height: 100%;
+width: 2px;
+background-color: var(--gray-300);
+}
+
+.timeline-item {
+position: relative;
+margin-bottom: 20px;
+}
+
+.timeline-item:last-child {
+margin-bottom: 0;
+}
+
+.timeline-item::before {
+content: '';
+position: absolute;
+left: -30px;
+top: 6px;
+width: 16px;
+height: 16px;
+border-radius: 50%;
+background-color: white;
+border: 2px solid var(--gray-400);
+z-index: 1;
+}
+
+.timeline-item.completed::before {
+border-color: var(--success);
+}
+
+.timeline-item.processing::before {
+border-color: var(--primary);
+}
+
+.timeline-item.pending::before {
+border-color: var(--warning);
+}
+
+.timeline-item.failed::before {
+border-color: var(--danger);
+}
+
+.timeline-date {
+font-size: 12px;
+color: var(--gray-500);
+margin-bottom: 4px;
+}
+
+.timeline-area {
+font-size: 12px;
+color: var(--primary);
+margin-bottom: 2px;
+font-weight: 500;
+}
+
+.timeline-user {
+font-size: 12px;
+color: var(--gray-600);
+margin-bottom: 4px;
+}
+
+.timeline-content {
+background-color: var(--btn-hover);
+padding: 12px;
+border-radius: 6px;
+}
+
+/* Media queries para dispositivos móviles */
+@media (max-width: 768px) {
+.sidebar {
+transform: translateX(-100%);
+transition: transform 0.3s ease;
+}
+
+.sidebar.open {
+transform: translateX(0);
+}
+
+.main-container {
+margin-left: 0;
+}
+
+.container {
+padding: 10px;
+}
+
+.header-top {
+flex-direction: column;
+gap: 16px;
+align-items: flex-start;
+}
+
+.table-header {
+flex-direction: column;
+gap: 16px;
+align-items: flex-start;
+}
+
+.orders-table {
+font-size: 14px;
+}
+
+.orders-table th,
+.orders-table td {
+padding: 10px;
+}
+
+.order-details-grid {
+grid-template-columns: 1fr;
+}
+
+.contact-actions {
+grid-template-columns: 1fr;
+}
+
+.contact-action-btn {
+padding: 12px;
+}
+
+.modal-content {
+max-width: 95%;
+}
+
+.detail-tab {
+padding: 12px 16px;
+}
+
+.timeline {
+padding-left: 20px;
+}
+
+.timeline::before {
+left: 5px;
+}
+
+.timeline-item::before {
+left: -14px;
+}
+}
+</style>
+</head>
+<body>
+<!-- Sidebar -->
+<aside class="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-title">
+      <i class="fas fa-tower-observation"></i>
+      <span>Torre de Control</span>
+    </div>
+  </div>
+
+  <nav class="sidebar-menu">
+    <!-- Módulo Torre de Control -->
+    <div class="menu-module">
+      <div class="module-title" onclick="toggleModule('torre-control')">
+        <i class="fas fa-tower-observation"></i>
+        <span>Torre de Control</span>
+        <i class="fas fa-chevron-down module-arrow"></i>
+      </div>
+      <div class="module-content expanded" id="torre-control">
+        <a href="#" class="menu-item confirmados active" data-page="confirmados">
+          <i class="fas fa-check-circle"></i>
+          <span>Bandeja Confirmados</span>
+        </a>
+        <a href="#" class="menu-item tce" data-page="tce">
+          <i class="fas fa-user-tie"></i>
+          <span>Bandeja TCE</span>
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="sidebar-footer">
+    <p>© 2023 Sistema de Gestión</p>
+    <p>Versión 1.0.0</p>
+  </div>
+</aside>
+
+<!-- Main Content -->
+<main class="main-container">
+<div class="container">
+<header>
+<div class="header-top">
+<h1 class="header-title" id="pageTitle">Bandeja Confirmados</h1>
+<div class="user-info">
+<span>Contrata: Juan Pérez</span>
+<div class="user-avatar">JP</div>
+</div>
+</div>
+
+<div class="alert-banner" id="alertBanner">
+<i class="fas fa-info-circle"></i>
+<div class="alert-text" id="alertText">
+<strong>Bandeja de órdenes confirmadas</strong>. Visualiza y gestiona las órdenes asignadas.
+</div>
+<button id="viewOrdersBtn">Ver órdenes</button>
+</div>
+</header>
+
+<!-- Contenedor de páginas -->
+<div id="pagesContainer">
+<!-- Página Bandeja Confirmados -->
+<div id="confirmados-page" class="page-content">
+  <div class="main-content">
+    <div class="table-header">
+      <h2 class="table-title">Órdenes Confirmadas</h2>
+      <div class="filter-actions">
+        <button class="filter-btn active" onclick="filterOrders('all')">
+          <i class="fas fa-list"></i> Todas
+        </button>
+        <button class="filter-btn" onclick="filterOrders('pending')">
+          <i class="fas fa-clock"></i> Pendientes
+        </button>
+        <button class="filter-btn" onclick="filterOrders('processing')">
+          <i class="fas fa-spinner"></i> En Proceso
+        </button>
+        <button class="filter-btn" onclick="filterOrders('completed')">
+          <i class="fas fa-check-circle"></i> Completadas
+        </button>
+      </div>
+    </div>
+
+    <!-- Alerta de órdenes fuera de horario -->
+    <div class="alert-banner out-of-schedule-alert" id="outOfScheduleAlert" style="display: none;">
+      <i class="fas fa-exclamation-triangle"></i>
+      <div class="alert-text">
+        <strong id="outOfScheduleCount">0</strong> órdenes pendientes fuera del horario definido. Requiere atención.
+      </div>
+      <button id="viewOutOfScheduleBtn">Ver órdenes</button>
+    </div>
+
+    <table class="orders-table">
+      <thead>
+        <tr>
+          <th>N° Orden</th>
+          <th>Cliente</th>
+          <th>Dirección</th>
+          <th>Fecha Agendada</th>
+          <th>Hora</th>
+          <th>Estado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="confirmadosTableBody">
+        <tr class="order-row" data-order-id="ORD-001250" data-status="pending" data-schedule="2023-06-15" data-time="10:00">
+          <td class="order-id">ORD-001250</td>
+          <td>Juan Pérez</td>
+          <td>Av. Principal 123, Lima</td>
+          <td>2023-06-15</td>
+          <td>10:00</td>
+          <td><span class="status-badge status-pending">Pendiente</span></td>
+          <td>
+            <div class="actions">
+              <button class="action-btn primary" onclick="viewOrderDetail('ORD-001250')" title="Ver detalle">
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+        <tr class="order-row" data-order-id="ORD-001251" data-status="processing" data-schedule="2023-06-15" data-time="14:30">
+          <td class="order-id">ORD-001251</td>
+          <td>María López</td>
+          <td>Jr. Secundaria 456, Cusco</td>
+          <td>2023-06-15</td>
+          <td>14:30</td>
+          <td><span class="status-badge status-responded">En Proceso</span></td>
+          <td>
+            <div class="actions">
+              <button class="action-btn primary" onclick="viewOrderDetail('ORD-001251')" title="Ver detalle">
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+        <tr class="order-row" data-order-id="ORD-001252" data-status="pending" data-schedule="2023-06-16" data-time="09:00">
+          <td class="order-id">ORD-001252</td>
+          <td>Carlos Mendoza</td>
+          <td>Av. Central 789, Arequipa</td>
+          <td>2023-06-16</td>
+          <td>09:00</td>
+          <td><span class="status-badge status-pending">Pendiente</span></td>
+          <td>
+            <div class="actions">
+              <button class="action-btn primary" onclick="viewOrderDetail('ORD-001252')" title="Ver detalle">
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+        <tr class="order-row" data-order-id="ORD-001253" data-status="pending" data-schedule="2023-06-16" data-time="11:00">
+          <td class="order-id">ORD-001253</td>
+          <td>Ana García</td>
+          <td>Calle Las Flores 101, Trujillo</td>
+          <td>2023-06-16</td>
+          <td>11:00</td>
+          <td><span class="status-badge status-pending">Pendiente</span></td>
+          <td>
+            <div class="actions">
+              <button class="action-btn primary" onclick="viewOrderDetail('ORD-001253')" title="Ver detalle">
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+        <tr class="order-row" data-order-id="ORD-001254" data-status="processing" data-schedule="2023-06-16" data-time="15:30">
+          <td class="order-id">ORD-001254</td>
+          <td>Luis Fernández</td>
+          <td>Pasaje Los Pinos 202, Piura</td>
+          <td>2023-06-16</td>
+          <td>15:30</td>
+          <td><span class="status-badge status-responded">En Proceso</span></td>
+          <td>
+            <div class="actions">
+              <button class="action-btn primary" onclick="viewOrderDetail('ORD-001254')" title="Ver detalle">
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+        <tr class="order-row" data-order-id="ORD-001255" data-status="completed" data-schedule="2023-06-14" data-time="10:00">
+          <td class="order-id">ORD-001255</td>
+          <td>Rosa Martínez</td>
+          <td>Calle Los Rosales 321, Chiclayo</td>
+          <td>2023-06-14</td>
+          <td>10:00</td>
+          <td><span class="status-badge status-completed">Completada</span></td>
+          <td>
+            <div class="actions">
+              <button class="action-btn primary" onclick="viewOrderDetail('ORD-001255')" title="Ver detalle">
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+        <tr class="order-row out-of-schedule" data-order-id="ORD-001256" data-status="pending" data-schedule="2023-06-17" data-time="19:00">
+          <td class="order-id">ORD-001256</td>
+          <td>Miguel Ángel Ruiz</td>
+          <td>Av. La Marina 456, Lima</td>
+          <td>2023-06-17</td>
+          <td>19:00
+            <span class="out-of-schedule-indicator">
+              <i class="fas fa-exclamation-circle"></i> Fuera de horario
+            </span>
+          </td>
+          <td><span class="status-badge status-pending">Pendiente</span></td>
+          <td>
+            <div class="actions">
+              <button class="action-btn primary" onclick="viewOrderDetail('ORD-001256')" title="Ver detalle">
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+        <tr class="order-row out-of-schedule" data-order-id="ORD-001257" data-status="pending" data-schedule="2023-06-17" data-time="20:30">
+          <td class="order-id">ORD-001257</td>
+          <td>Patricia Sánchez</td>
+          <td>Jr. Huáscar 789, Cusco</td>
+          <td>2023-06-17</td>
+          <td>20:30
+            <span class="out-of-schedule-indicator">
+              <i class="fas fa-exclamation-circle"></i> Fuera de horario
+            </span>
+          </td>
+          <td><span class="status-badge status-pending">Pendiente</span></td>
+          <td>
+            <div class="actions">
+              <button class="action-btn primary" onclick="viewOrderDetail('ORD-001257')" title="Ver detalle">
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+        <tr class="order-row out-of-schedule" data-order-id="ORD-001258" data-status="pending" data-schedule="2023-06-18" data-time="07:00">
+          <td class="order-id">ORD-001258</td>
+          <td>Jorge Ramírez</td>
+          <td>Av. Arequipa 101, Tacna</td>
+          <td>2023-06-18</td>
+          <td>07:00
+            <span class="out-of-schedule-indicator">
+              <i class="fas fa-exclamation-circle"></i> Fuera de horario
+            </span>
+          </td>
+          <td><span class="status-badge status-pending">Pendiente</span></td>
+          <td>
+            <div class="actions">
+              <button class="action-btn primary" onclick="viewOrderDetail('ORD-001258')" title="Ver detalle">
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Página Bandeja TCE -->
+<div id="tce-page" class="page-content" style="display: none;">
+  <div class="main-content">
+    <div class="table-header">
+      <h2 class="table-title">Bandeja TCE</h2>
+      <div class="filter-actions">
+        <button class="filter-btn active" onclick="filterTCEOrders('all')">
+          <i class="fas fa-list"></i> Todas
+        </button>
+        <button class="filter-btn" onclick="filterTCEOrders('pending')">
+          <i class="fas fa-clock"></i> Pendientes
+        </button>
+        <button class="filter-btn" onclick="filterTCEOrders('attended')">
+          <i class="fas fa-user-check"></i> Atendidas
+        </button>
+        <button class="filter-btn" onclick="filterTCEOrders('re-derived')">
+          <i class="fas fa-redo"></i> Re-derivadas
+        </button>
+        <button class="filter-btn" onclick="filterTCEOrders('finalized')">
+          <i class="fas fa-check-circle"></i> Finalizadas
+        </button>
+      </div>
+    </div>
+
+    <table class="orders-table">
+      <thead>
+        <tr>
+          <th>N° Orden</th>
+          <th>Cliente</th>
+          <th>Motivo Derivación</th>
+          <th>Fecha Derivación</th>
+          <th>Última Actualización</th>
+          <th>Estado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="tceTableBody">
+        <!-- Las órdenes TCE se cargarán dinámicamente -->
+      </tbody>
+    </table>
+  </div>
+</div>
+</div>
+</main>
+
+<!-- Modal para ver detalle de orden -->
+<div id="orderDetailModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 class="modal-title">Detalle de Orden: <span id="detailOrderId"></span></h3>
+      <button class="close-btn" onclick="closeModal('orderDetailModal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <!-- Pestañas -->
+      <div class="detail-tabs">
+        <div class="detail-tab active" id="datosTab" onclick="switchDetailTab('datos')">Datos Generales</div>
+        <div class="detail-tab" id="tceResponseTab" style="display: none;" onclick="switchDetailTab('respuesta-tce')">Respuesta TCE</div>
+        <div class="detail-tab" id="accionesTab" onclick="switchDetailTab('acciones')">Acciones</div>
+        <div class="detail-tab" id="historialTab" onclick="switchDetailTab('historial')">Historial</div>
+      </div>
+
+      <!-- Contenido de la pestaña Datos Generales -->
+      <div id="datos-tab" class="detail-content active">
+        <div class="order-detail-group">
+            <div class="order-detail-row">
+              <div class="order-detail-label">Medio de Confirmación:</div>
+              <div class="order-detail-value" id="detailConfirmationMethod">-</div>
+            </div>
+            <div class="order-detail-row">
+              <div class="order-detail-label">ID WO:</div>
+              <div class="order-detail-value" id="detailWOId">-</div>
+            </div>
+            <div class="order-detail-row">
+              <div class="order-detail-label">Producto Contratado:</div>
+              <div class="order-detail-value" id="detailProduct">-</div>
+            </div>
+            <div class="order-detail-row">
+              <div class="order-detail-label">Tipo de Actividad:</div>
+              <div class="order-detail-value" id="detailActivityType">-</div>
+            </div>
+            <div class="order-detail-row">
+              <div class="order-detail-label">Comentario (Confirmado):</div>
+              <div class="order-detail-value" id="detailComment">-</div>
+            </div>
+            <div class="order-detail-row">
+              <div class="order-detail-label">Fecha Agendada:</div>
+              <div class="order-detail-value" id="detailScheduledDate">-</div>
+            </div>
+            <div class="order-detail-row">
+              <div class="order-detail-label">Hora:</div>
+              <div class="order-detail-value" id="detailScheduledTime">-</div>
+            </div>
+            <div class="order-detail-row">
+              <div class="order-detail-label">Estado Actual:</div>
+              <div class="order-detail-value" id="detailStatus">-</div>
+            </div>
+          </div>
+      </div>
+
+      <!-- Contenido de la pestaña Respuesta TCE -->
+      <div id="respuesta-tce-tab" class="detail-content">
+        <div class="order-detail-group">
+          <h4>Información de la Respuesta TCE</h4>
+          <div class="order-detail-row">
+            <div class="order-detail-label">Fecha de Respuesta:</div>
+            <div class="order-detail-value" id="tceResponseDate">-</div>
+          </div>
+          <div class="order-detail-row">
+            <div class="order-detail-label">Hora de Respuesta:</div>
+            <div class="order-detail-value" id="tceResponseTime">-</div>
+          </div>
+          <div class="order-detail-row">
+            <div class="order-detail-label">Comentario TCE:</div>
+            <div class="order-detail-value" id="tceResponseComment">-</div>
+          </div>
+          <div class="order-detail-row">
+            <div class="order-detail-label">Documento Adjunto:</div>
+            <div class="order-detail-value" id="tceResponseDocument">-</div>
+          </div>
+          <div class="order-detail-row">
+            <div class="order-detail-label">Estado Actual:</div>
+            <div class="order-detail-value" id="tceResponseStatus">-</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Contenido de la pestaña Acciones -->
+      <div id="acciones-tab" class="detail-content">
+        <div class="contact-section">
+          <div class="contact-header">
+            <h4 class="contact-title">Acciones Disponibles</h4>
+            <span class="contact-status pending" id="orderStatusBadge">Pendiente de respuesta</span>
+          </div>
+          
+          <div class="contact-actions" id="orderActionsGrid">
+            <!-- Las acciones se cargarán dinámicamente según el estado -->
+          </div>
+        </div>
+      </div>
+      
+      <!-- Contenido de la pestaña Historial -->
+      <div id="historial-tab" class="detail-content">
+        <div class="order-detail-group">
+          <h4>Historial de la Orden</h4>
+          <div class="timeline" id="orderTimeline">
+            <!-- Los eventos del historial se cargarán dinámicamente -->
+          </div>
+        </div>
+      </div>
+      
+      <div class="form-actions">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('orderDetailModal')">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para reprogramar orden -->
+<div id="rescheduleModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 class="modal-title">Reprogramar Orden: <span id="rescheduleOrderId"></span></h3>
+      <button class="close-btn" onclick="closeModal('rescheduleModal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label for="rescheduleReason">Motivo de Reprogramación:</label>
+        <select id="rescheduleReason" class="form-control">
+          <option value="">Seleccione un motivo</option>
+          <option value="cliente-no-disponible">Cliente no disponible</option>
+          <option value="problemas-tecnicos">Problemas técnicos</option>
+          <option value="falta-de-recursos">Falta de recursos</option>
+          <option value="condiciones-climaticas">Condiciones climáticas adversas</option>
+          <option value="solicitud-cliente">Solicitud del cliente</option>
+          <option value="">No asignar tarea a personal técnico</option>
+          <option value="">Desbordarmiento de capacidad</option>
+          <option value="">Incumplimiento del rango horario</option>
+          <option value="">Sin disponibilidad de team</option>
+          <option value="">Sin Stock Equipos / Materiales</option>
+          <option value="">Adelantar ordenes sin previa coordinación con CCI</option>
+        </select>
+      </div>
+      
+      <div class="form-group">
+        <label for="rescheduleComment">Comentario (Opcional):</label>
+        <textarea id="rescheduleComment" class="form-control" rows="3" placeholder="Ingrese comentarios adicionales sobre la reprogramación"></textarea>
+      </div>
+      
+      <div class="form-actions">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('rescheduleModal')">Cancelar</button>
+        <button type="button" class="btn btn-primary" onclick="saveReschedule()">Guardar Cambios</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para derivar a TCE -->
+<div id="deriveToTCEModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 class="modal-title">Derivar a TCE: <span id="tceOrderId"></span></h3>
+      <button class="close-btn" onclick="closeModal('deriveToTCEModal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label for="tceReasonSelect">Motivo de Derivación (Percance Técnico):</label>
+        <select id="tceReasonSelect" class="form-control">
+          <option value="">Seleccione un motivo</option>
+          <option value="fallo-equipo">Fallo de equipo</option>
+          <option value="problema-conexion">Problema de conexión</option>
+          <option value="falta-infraestructura">Falta de infraestructura</option>
+          <option value="incompatibilidad-equipo">Incompatibilidad de equipo</option>
+          <option value="otros">Otros</option>
+        </select>
+      </div>
+      
+      <div class="form-group">
+        <label for="tceComment">Comentario (Opcional):</label>
+        <textarea id="tceComment" class="form-control" rows="3" placeholder="Ingrese comentarios adicionales"></textarea>
+      </div>
+      
+      <div class="form-actions">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('deriveToTCEModal')">Cancelar</button>
+        <button type="button" class="btn btn-primary" onclick="saveDeriveToTCE()">Derivar a TCE</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para derivar a Backlog -->
+<div id="deriveToBacklogModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 class="modal-title">Derivar a Backlog: <span id="backlogOrderId"></span></h3>
+      <button class="close-btn" onclick="closeModal('deriveToBacklogModal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label for="backlogReasonSelect">Motivo de Derivación (Percance Externo):</label>
+        <select id="backlogReasonSelect" class="form-control">
+          <option value="">Seleccione un motivo</option>
+          <option value="acceso-dificil">Acceso difícil a la instalación</option>
+          <option value="cliente-no-presente">Cliente no presente</option>
+          <option value="autorizacion-pendiente">Autorización pendiente</option>
+          <option value="restricciones-edificio">Restricciones del edificio</option>
+          <option value="otros">Otros</option>
+        </select>
+      </div>
+      
+      <div class="form-group">
+        <label for="backlogComment">Comentario (Opcional):</label>
+        <textarea id="backlogComment" class="form-control" rows="3" placeholder="Ingrese comentarios adicionales"></textarea>
+      </div>
+      
+      <div class="form-actions">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('deriveToBacklogModal')">Cancelar</button>
+        <button type="button" class="btn btn-primary" onclick="saveDeriveToBacklog()">Derivar a Backlog</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para cancelar orden -->
+<div id="cancelOrderModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 class="modal-title">Cancelar Orden: <span id="cancelOrderId"></span></h3>
+      <button class="close-btn" onclick="closeModal('cancelOrderModal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label for="cancelReason">Motivo de Cancelación:</label>
+        <select id="cancelReason" class="form-control">
+          <option value="">Seleccione motivo</option>
+            <option value="">Orden cancelada en oneclick</option>
+            <option value="">Dirección errónea</option>
+            <option value="">Error en el tipo de servicio contratado</option>
+            <option value="">Venta duplicada Empresas</option>
+            <option value="">Venta duplicada Hogar</option>
+            <option value="">Galería / C.C. previamente bloqueado para venta</option>
+            <option value="">Aplica costos adicionales para revisión</option>
+            <option value="">Cliente no desea atención </option>
+            <option value="">Cliente no solicitó el servicio</option>
+            <option value="">Desiste de servicio por contraoferta</option>
+            <option value="">Desiste del servicio por mundanza o cambio de local</option>
+            <option value="">Servicio operativo (se realizaron pruebas)</option>
+        </select>
+      </div>
+      
+      <div class="form-group">
+        <label for="cancelComment">Comentario (Opcional):</label>
+        <textarea id="cancelComment" class="form-control" rows="3" placeholder="Ingrese comentarios adicionales sobre la cancelación"></textarea>
+      </div>
+      
+      <div class="form-actions">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('cancelOrderModal')">Cancelar</button>
+        <button type="button" class="btn btn-danger" onclick="saveCancelOrder()">Confirmar Cancelación</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para finalizar instalación -->
+<div id="finishInstallationModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 class="modal-title">Finalizar Instalación: <span id="finishOrderId"></span></h3>
+      <button class="close-btn" onclick="closeModal('finishInstallationModal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Documento Adjunto:</label>
+        <div class="file-upload">
+          <input type="file" id="finishDocument" accept=".pdf,.jpg,.jpeg,.png" onchange="updateFileName(this)">
+          <div class="file-upload-label">
+            <i class="fas fa-cloud-upload-alt file-upload-icon"></i>
+            <div class="file-upload-text">Haga clic para subir un archivo o arrástrelo aquí</div>
+            <div class="file-upload-text" style="font-size: 12px; color: var(--gray-500);">Formatos permitidos: PDF, JPG, PNG (Máx. 5MB)</div>
+            <div id="fileName" class="file-upload-filename"></div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label for="finishComment">Comentario (Opcional):</label>
+        <textarea id="finishComment" class="form-control" rows="3" placeholder="Ingrese comentarios adicionales sobre la instalación"></textarea>
+      </div>
+      
+      <div class="form-actions">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('finishInstallationModal')">Cancelar</button>
+        <button type="button" class="btn btn-primary" onclick="saveFinishInstallation()">Finalizar Instalación</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para finalizar TCE -->
+<div id="finalizeTCEModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 class="modal-title">Finalizar Orden TCE: <span id="finalizeOrderId"></span></h3>
+      <button class="close-btn" onclick="closeModal('finalizeTCEModal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Documento Adjunto:</label>
+        <div class="file-upload">
+          <input type="file" id="finalizeDocument" accept=".pdf,.jpg,.jpeg,.png" onchange="updateFinalizeFileName(this)">
+          <div class="file-upload-label">
+            <i class="fas fa-cloud-upload-alt file-upload-icon"></i>
+            <div class="file-upload-text">Haga clic para subir un archivo o arrástrelo aquí</div>
+            <div class="file-upload-text" style="font-size: 12px; color: var(--gray-500);">Formatos permitidos: PDF, JPG, PNG (Máx. 5MB)</div>
+            <div id="finalizeFileName" class="file-upload-filename"></div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label for="finalizeComment">Comentario (Opcional):</label>
+        <textarea id="finalizeComment" class="form-control" rows="3" placeholder="Ingrese comentarios adicionales sobre la finalización"></textarea>
+      </div>
+      
+      <div class="form-actions">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('finalizeTCEModal')">Cancelar</button>
+        <button type="button" class="btn btn-success" onclick="saveFinalizeTCE()">Finalizar Orden</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para volver a derivar a TCE -->
+<div id="reDeriveToTCEModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 class="modal-title">Volver a Derivar a TCE: <span id="reDeriveOrderId"></span></h3>
+      <button class="close-btn" onclick="closeModal('reDeriveToTCEModal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label for="reDeriveReasonSelect">Motivo de Re-derivación:</label>
+        <select id="reDeriveReasonSelect" class="form-control">
+          <option value="">Seleccione un motivo</option>
+          <option value="">Inconsistencia de data de recursos</option>
+          <option value="">No actualiza recursos en OFSC o WFM</option>
+          <option value="">Error de asignación de recursos en galerías/edificios vestidos</option>
+          <option value="">ONTID ocupada por otro servicio</option>
+          <option value="">Caida de la plataforma planner</option>
+          <option value="">Caida de la plataforma autoprovisión</option>
+          <option value="">Caida de la plataforma SIG Manager</option>
+          <option value="">Caida de la plataforma Portal IM</option>
+          <option value="">Demora de activación - Cesop</option>
+          <option value="">NAP / Puerto saturado (Sin disponibilidad)</option>
+          <option value="">Area de provisión no asigna recursos</option>
+          <option value="">Corte administrativo (deuda/baja)</option>
+          <option value="">Dirección errónea de cliente Entel vigente</option>
+          <option value="">No cumple con BW de cliente Entel vigente</option>
+          <option value="">Saturación de BW de cliente Entel vigente</option>
+          <option value="">Inconsistencia de puerta OLT en OFSC/Planner y NCE</option>
+          <option value="">Problemas de registro en el ICAR+</option>
+          <option value="">Orden en cae en Error en Oneclick/Onetouch</option>
+          <option value="">Data incompleta o errada de los recursos declarados en la red</option>
+          <option value="">Afectación masiva de plataformas asociadas al TDE, Fullstak (EMA, EOC, BSCS, EBS, OC, APICA)</option>
+          <option value="">Respuesta de activación con error en EMA</option>
+          <option value="">Activación SOK/NOK, y sin asignación de IPS en NCE</option>
+          <option value="">Solicita instalación de CTOs internas (Edificio/Condominio/Galerias/C.C.)</option>
+          <option value="">NAP / Puerto saturado (Sin disponibilidad) Pangeaco</option>
+          <option value="">NAP Robada Pangeaco</option>
+          <option value="">Potencia Atenuada Pangeaco</option>
+          <option value="">Manipulación en NAP / Mufa Pangeaco</option>
+        </select>
+      </div>
+      
+      <div class="form-group">
+        <label for="reDeriveComment">Comentario (Opcional):</label>
+        <textarea id="reDeriveComment" class="form-control" rows="3" placeholder="Ingrese comentarios adicionales sobre la re-derivación"></textarea>
+      </div>
+      
+      <div class="form-actions">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('reDeriveToTCEModal')">Cancelar</button>
+        <button type="button" class="btn btn-warning" onclick="saveReDeriveToTCE()">Volver a Derivar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Datos de ejemplo para las órdenes
+const ordersData = {
+  'ORD-001250': {
+    customerName: 'Juan Pérez',
+    address: 'Av. Principal 123',
+    district: 'San Miguel',
+    province: 'Lima',
+    department: 'Lima',
+    phone: '987654321',
+    confirmationMethod: 'Llamada telefónica',
+    woId: 'WO-2023-001250',
+    product: 'Internet Fibra Óptica 100 Mbps',
+    activityType: 'Instalación',
+    comment: 'Cliente confirmó fecha y hora de instalación',
+    scheduledDate: '2023-06-15',
+    scheduledTime: '10:00',
+    status: 'pending',
+    technician: 'Carlos Rodríguez',
+    history: [
+      {
+        date: '2023-06-10',
+        time: '14:30',
+        title: 'Orden creada',
+        description: 'Orden generada en el sistema',
+        status: 'completed',
+        user: 'Sistema'
+      },
+      {
+        date: '2023-06-12',
+        time: '10:15',
+        title: 'Confirmación recibida',
+        description: 'Cliente confirmó fecha y hora de instalación',
+        status: 'completed',
+        user: 'Agendadora'
+      }
+    ]
+  },
+  'ORD-001251': {
+    customerName: 'María López',
+    address: 'Jr. Secundaria 456',
+    district: 'Wanchaq',
+    province: 'Cusco',
+    department: 'Cusco',
+    phone: '987654322',
+    confirmationMethod: 'WhatsApp',
+    woId: 'WO-2023-001251',
+    product: 'TV Cable HD',
+    activityType: 'Instalación',
+    comment: 'Cliente requiere instalación en segundo piso',
+    scheduledDate: '2023-06-15',
+    scheduledTime: '14:30',
+    status: 'processing',
+    technician: 'Carlos Rodríguez',
+    history: [
+      {
+        date: '2023-06-10',
+        time: '14:30',
+        title: 'Orden creada',
+        description: 'Orden generada en el sistema',
+        status: 'completed',
+        user: 'Sistema'
+      },
+      {
+        date: '2023-06-12',
+        time: '10:15',
+        title: 'Confirmación recibida',
+        description: 'Cliente confirmó fecha y hora de instalación',
+        status: 'completed',
+        user: 'Agendadora'
+      },
+      {
+        date: '2023-06-15',
+        time: '09:45',
+        title: 'Instalación iniciada',
+        description: 'Técnico llegó al domicilio y comenzó la instalación',
+        status: 'processing',
+        user: 'Carlos Rodríguez'
+      }
+    ]
+  },
+  'ORD-001252': {
+    customerName: 'Carlos Mendoza',
+    address: 'Av. Central 789',
+    district: 'Cercado',
+    province: 'Arequipa',
+    department: 'Arequipa',
+    phone: '987654323',
+    confirmationMethod: 'Llamada telefónica',
+    woId: 'WO-2023-001252',
+    product: 'Cambio de módem',
+    activityType: 'Mantenimiento',
+    comment: 'Cliente reporta problemas con conexión',
+    scheduledDate: '2023-06-16',
+    scheduledTime: '09:00',
+    status: 'pending',
+    technician: 'Carlos Rodríguez',
+    history: [
+      {
+        date: '2023-06-11',
+        time: '14:30',
+        title: 'Orden creada',
+        description: 'Orden generada en el sistema',
+        status: 'completed',
+        user: 'Sistema'
+      },
+      {
+        date: '2023-06-13',
+        time: '10:15',
+        title: 'Confirmación recibida',
+        description: 'Cliente confirmó fecha y hora de instalación',
+        status: 'completed',
+        user: 'Agendadora'
+      }
+    ]
+  },
+  'ORD-001253': {
+    customerName: 'Ana García',
+    address: 'Calle Las Flores 101',
+    district: 'Trujillo',
+    province: 'Trujillo',
+    department: 'La Libertad',
+    phone: '987654324',
+    confirmationMethod: 'Email',
+    woId: 'WO-2023-001253',
+    product: 'Internet + TV Doble Play',
+    activityType: 'Instalación',
+    comment: 'Cliente solicita instalación en horario de mañana',
+    scheduledDate: '2023-06-16',
+    scheduledTime: '11:00',
+    status: 'pending',
+    technician: 'Carlos Rodríguez',
+    history: [
+      {
+        date: '2023-06-11',
+        time: '14:30',
+        title: 'Orden creada',
+        description: 'Orden generada en el sistema',
+        status: 'completed',
+        user: 'Sistema'
+      },
+      {
+        date: '2023-06-13',
+        time: '10:15',
+        title: 'Confirmación recibida',
+        description: 'Cliente confirmó fecha y hora de instalación',
+        status: 'completed',
+        user: 'Agendadora'
+      }
+    ]
+  },
+  'ORD-001254': {
+    customerName: 'Luis Fernández',
+    address: 'Pasaje Los Pinos 202',
+    district: 'Piura',
+    province: 'Piura',
+    department: 'Piura',
+    phone: '987654325',
+    confirmationMethod: 'SMS',
+    woId: 'WO-2023-001254',
+    product: 'Migración a Fibra Óptica',
+    activityType: 'Actualización',
+    comment: 'Cliente confirma migración de servicio',
+    scheduledDate: '2023-06-16',
+    scheduledTime: '15:30',
+    status: 'processing',
+    technician: 'Carlos Rodríguez',
+    history: [
+      {
+        date: '2023-06-11',
+        time: '14:30',
+        title: 'Orden creada',
+        description: 'Orden generada en el sistema',
+        status: 'completed',
+        user: 'Sistema'
+      },
+      {
+        date: '2023-06-13',
+        time: '10:15',
+        title: 'Confirmación recibida',
+        description: 'Cliente confirmó fecha y hora de instalación',
+        status: 'completed',
+        user: 'Agendadora'
+      },
+      {
+        date: '2023-06-16',
+        time: '14:45',
+        title: 'Instalación iniciada',
+        description: 'Técnico llegó al domicilio y comenzó la instalación',
+        status: 'processing',
+        user: 'Carlos Rodríguez'
+      }
+    ]
+  },
+  'ORD-001255': {
+    customerName: 'Rosa Martínez',
+    address: 'Calle Los Rosales 321',
+    district: 'Chiclayo',
+    province: 'Chiclayo',
+    department: 'Lambayeque',
+    phone: '987654326',
+    confirmationMethod: 'Llamada telefónica',
+    woId: 'WO-2023-001255',
+    product: 'Internet Fibra Óptica 50 Mbps',
+    activityType: 'Instalación',
+    comment: 'Instalación completada con éxito',
+    scheduledDate: '2023-06-14',
+    scheduledTime: '10:00',
+    status: 'completed',
+    technician: 'Carlos Rodríguez',
+    history: [
+      {
+        date: '2023-06-09',
+        time: '14:30',
+        title: 'Orden creada',
+        description: 'Orden generada en el sistema',
+        status: 'completed',
+        user: 'Sistema'
+      },
+      {
+        date: '2023-06-11',
+        time: '10:15',
+        title: 'Confirmación recibida',
+        description: 'Cliente confirmó fecha y hora de instalación',
+        status: 'completed',
+        user: 'Agendadora'
+      },
+      {
+        date: '2023-06-14',
+        time: '09:45',
+        title: 'Instalación iniciada',
+        description: 'Técnico llegó al domicilio y comenzó la instalación',
+        status: 'completed',
+        user: 'Carlos Rodríguez'
+      },
+      {
+        date: '2023-06-14',
+        time: '11:30',
+        title: 'Instalación completada',
+        description: 'Instalación finalizada con éxito',
+        status: 'completed',
+        user: 'Carlos Rodríguez'
+      }
+    ]
+  },
+  'ORD-001256': {
+    customerName: 'Miguel Ángel Ruiz',
+    address: 'Av. La Marina 456',
+    district: 'San Miguel',
+    province: 'Lima',
+    department: 'Lima',
+    phone: '987654327',
+    confirmationMethod: 'WhatsApp',
+    woId: 'WO-2023-001256',
+    product: 'Internet Fibra Óptica 200 Mbps',
+    activityType: 'Instalación',
+    comment: 'Cliente solicita horario nocturno',
+    scheduledDate: '2023-06-17',
+    scheduledTime: '19:00',
+    status: 'pending',
+    technician: 'Carlos Rodríguez',
+    history: [
+      {
+        date: '2023-06-12',
+        time: '14:30',
+        title: 'Orden creada',
+        description: 'Orden generada en el sistema',
+        status: 'completed',
+        user: 'Sistema'
+      },
+      {
+        date: '2023-06-14',
+        time: '10:15',
+        title: 'Confirmación recibida',
+        description: 'Cliente confirmó fecha y hora de instalación',
+        status: 'completed',
+        user: 'Agendadora'
+      }
+    ]
+  },
+  'ORD-001257': {
+    customerName: 'Patricia Sánchez',
+    address: 'Jr. Huáscar 789',
+    district: 'Wanchaq',
+    province: 'Cusco',
+    department: 'Cusco',
+    phone: '987654328',
+    confirmationMethod: 'Llamada telefónica',
+    woId: 'WO-2023-001257',
+    product: 'TV Cable HD + Netflix',
+    activityType: 'Instalación',
+    comment: 'Cliente requiere instalación en horario nocturno',
+    scheduledDate: '2023-06-17',
+    scheduledTime: '20:30',
+    status: 'pending',
+    technician: 'Carlos Rodríguez',
+    history: [
+      {
+        date: '2023-06-12',
+        time: '14:30',
+        title: 'Orden creada',
+        description: 'Orden generada en el sistema',
+        status: 'completed',
+        user: 'Sistema'
+      },
+      {
+        date: '2023-06-14',
+        time: '10:15',
+        title: 'Confirmación recibida',
+        description: 'Cliente confirmó fecha y hora de instalación',
+        status: 'completed',
+        user: 'Agendadora'
+      }
+    ]
+  },
+  'ORD-001258': {
+    customerName: 'Jorge Ramírez',
+    address: 'Av. Arequipa 101',
+    district: 'Tacna',
+    province: 'Tacna',
+    department: 'Tacna',
+    phone: '987654329',
+    confirmationMethod: 'Email',
+    woId: 'WO-2023-001258',
+    product: 'Internet Fibra Óptica 100 Mbps',
+    activityType: 'Instalación',
+    comment: 'Cliente solicita hora temprana',
+    scheduledDate: '2023-06-18',
+    scheduledTime: '07:00',
+    status: 'pending',
+    technician: 'Carlos Rodríguez',
+    history: [
+      {
+        date: '2023-06-13',
+        time: '14:30',
+        title: 'Orden creada',
+        description: 'Orden generada en el sistema',
+        status: 'completed',
+        user: 'Sistema'
+      },
+      {
+        date: '2023-06-15',
+        time: '10:15',
+        title: 'Confirmación recibida',
+        description: 'Cliente confirmó fecha y hora de instalación',
+        status: 'completed',
+        user: 'Agendadora'
+      }
+    ]
+  }
+};
+
+// Datos de ejemplo para las órdenes TCE
+const tceOrdersData = {
+  'TCE-001': {
+    orderId: 'ORD-001256',
+    customerName: 'Miguel Ángel Ruiz',
+    address: 'Av. La Marina 456',
+    district: 'San Miguel',
+    province: 'Lima',
+    department: 'Lima',
+    phone: '987654327',
+    woId: 'WO-2023-001256',
+    product: 'Internet Fibra Óptica 200 Mbps',
+    activityType: 'Instalación',
+    derivationReason: 'Fallo de equipo',
+    derivationDate: '2023-06-18',
+    derivationTime: '10:30',
+    lastUpdateDate: '2023-06-18',
+    lastUpdateTime: '10:30',
+    status: 'pending',
+    comment: 'Cliente reporta que el módem no enciende',
+    reDerivationCount: 0,
+    history: [
+      {
+        date: '2023-06-12',
+        time: '14:30',
+        title: 'Orden creada',
+        description: 'Orden generada en el sistema',
+        status: 'completed',
+        user: 'Sistema'
+      },
+      {
+        date: '2023-06-14',
+        time: '10:15',
+        title: 'Confirmación recibida',
+        description: 'Cliente confirmó fecha y hora de instalación',
+        status: 'completed',
+        user: 'Agendadora'
+      },
+      {
+        date: '2023-06-18',
+        time: '10:30',
+        title: 'Derivada a TCE',
+        description: 'Orden derivada por fallo de equipo',
+        status: 'pending',
+        user: 'Carlos Rodríguez'
+      }
+    ]
+  },
+  'TCE-002': {
+    orderId: 'ORD-001257',
+    customerName: 'Patricia Sánchez',
+    address: 'Jr. Huáscar 789',
+    district: 'Wanchaq',
+    province: 'Cusco',
+    department: 'Cusco',
+    phone: '987654328',
+    woId: 'WO-2023-001257',
+    product: 'TV Cable HD + Netflix',
+    activityType: 'Instalación',
+    derivationReason: 'Problema de conexión',
+    derivationDate: '2023-06-18',
+    derivationTime: '11:15',
+    lastUpdateDate: '2023-06-18',
+    lastUpdateTime: '14:20',
+    status: 'attended',
+    comment: 'Señal débil en el televisor',
+    responseDate: '2023-06-18',
+    responseTime: '14:20',
+    responseComment: 'Se realizó ajuste de señal y se verificó conexión correcta',
+    responseDocument: 'reporte_tecnico_001257.pdf',
+    reDerivationCount: 0,
+    history: [
+      {
+        date: '2023-06-12',
+        time: '14:30',
+        title: 'Orden creada',
+        description: 'Orden generada en el sistema',
+        status: 'completed',
+        user: 'Sistema'
+      },
+      {
+        date: '2023-06-14',
+        time: '10:15',
+        title: 'Confirmación recibida',
+        description: 'Cliente confirmó fecha y hora de instalación',
+        status: 'completed',
+        user: 'Agendadora'
+      },
+      {
+        date: '2023-06-18',
+        time: '11:15',
+        title: 'Derivada a TCE',
+        description: 'Orden derivada por problema de conexión',
+        status: 'completed',
+        user: 'Carlos Rodríguez'
+      },
+      {
+        date: '2023-06-18',
+        time: '14:20',
+        title: 'Atendida por TCE',
+        description: 'Se realizó ajuste de señal y se verificó conexión',
+        status: 'completed',
+        user: 'Técnico TCE'
+      }
+    ]
+  },
+  'TCE-003': {
+    orderId: 'ORD-001258',
+    customerName: 'Jorge Ramírez',
+    address: 'Av. Arequipa 101',
+    district: 'Tacna',
+    province: 'Tacna',
+    department: 'Tacna',
+    phone: '987654329',
+    woId: 'WO-2023-001258',
+    product: 'Internet Fibra Óptica 100 Mbps',
+    activityType: 'Instalación',
+    derivationReason: 'Falta de infraestructura',
+    derivationDate: '2023-06-17',
+    derivationTime: '09:45',
+    lastUpdateDate: '2023-06-18',
+    lastUpdateTime: '16:30',
+    status: 'finalized',
+    comment: 'No hay red de fibra en la zona',
+    responseDate: '2023-06-18',
+    responseTime: '16:30',
+    responseComment: 'Se coordinó con equipo de infraestructura para instalación en próxima semana',
+    responseDocument: 'plan_accion_001258.pdf',
+    reDerivationCount: 0,
+    history: [
+      {
+        date: '2023-06-13',
+        time: '14:30',
+        title: 'Orden creada',
+        description: 'Orden generada en el sistema',
+        status: 'completed',
+        user: 'Sistema'
+      },
+      {
+        date: '2023-06-15',
+        time: '10:15',
+        title: 'Confirmación recibida',
+        description: 'Cliente confirmó fecha y hora de instalación',
+        status: 'completed',
+        user: 'Agendadora'
+      },
+      {
+        date: '2023-06-17',
+        time: '09:45',
+        title: 'Derivada a TCE',
+        description: 'Orden derivada por falta de infraestructura',
+        status: 'completed',
+        user: 'Carlos Rodríguez'
+      },
+      {
+        date: '2023-06-18',
+        time: '16:30',
+        title: 'Finalizada por TCE',
+        description: 'Se coordinó con equipo de infraestructura',
+        status: 'completed',
+        user: 'Técnico TCE'
+      }
+    ]
+  },
+  'TCE-004': {
+    orderId: 'ORD-001250',
+    customerName: 'Juan Pérez',
+    address: 'Av. Principal 123',
+    district: 'San Miguel',
+    province: 'Lima',
+    department: 'Lima',
+    phone: '987654321',
+    woId: 'WO-2023-001250',
+    product: 'Internet Fibra Óptica 100 Mbps',
+    activityType: 'Instalación',
+    derivationReason: 'Incompatibilidad de equipo',
+    derivationDate: '2023-06-16',
+    derivationTime: '15:20',
+    lastUpdateDate: '2023-06-18',
+    lastUpdateTime: '17:45',
+    status: 're-derived',
+    comment: 'El router no es compatible con la red',
+    responseDate: '2023-06-17',
+    responseTime: '10:15',
+    responseComment: 'Se reemplazó router pero problema persiste',
+    responseDocument: 'diagnostico_001250.pdf',
+    reDerivationCount: 1,
+    history: [
+      {
+        date: '2023-06-10',
+        time: '14:30',
+        title: 'Orden creada',
+        description: 'Orden generada en el sistema',
+        status: 'completed',
+        user: 'Sistema'
+      },
+      {
+        date: '2023-06-12',
+        time: '10:15',
+        title: 'Confirmación recibida',
+        description: 'Cliente confirmó fecha y hora de instalación',
+        status: 'completed',
+        user: 'Agendadora'
+      },
+      {
+        date: '2023-06-16',
+        time: '15:20',
+        title: 'Derivada a TCE',
+        description: 'Orden derivada por incompatibilidad de equipo',
+        status: 'completed',
+        user: 'Carlos Rodríguez'
+      },
+      {
+        date: '2023-06-17',
+        time: '10:15',
+        title: 'Atendida por TCE',
+        description: 'Se reemplazó router pero problema persiste',
+        status: 'completed',
+        user: 'Técnico TCE'
+      },
+      {
+        date: '2023-06-18',
+        time: '17:45',
+        title: 'Re-derivada a TCE',
+        description: 'El problema persiste después de la primera atención',
+        status: 'pending',
+        user: 'Carlos Rodríguez'
+      }
+    ]
+  }
+};
+
+// Variable global para la orden actual
+let currentOrderId = null;
+let currentTCEOrderId = null;
+let currentPage = 'confirmados';
+let currentFilter = 'all';
+let currentTCEFilter = 'all';
+
+// Función para cambiar de página
+function changePage(page) {
+  // Ocultar todas las páginas
+  document.querySelectorAll('.page-content').forEach(p => {
+    p.style.display = 'none';
+  });
+
+  // Mostrar la página seleccionada
+  document.getElementById(`${page}-page`).style.display = 'block';
+
+  // Actualizar el menú activo
+  document.querySelectorAll('.menu-item').forEach(item => {
+    item.classList.remove('active');
+  });
+  document.querySelector(`.menu-item[data-page="${page}"]`).classList.add('active');
+
+  // Actualizar la página actual
+  currentPage = page;
+
+  // Actualizar el título según la página
+  const titles = {
+    'confirmados': 'Bandeja Confirmados',
+    'tce': 'Bandeja TCE'
+  };
+
+  document.getElementById('pageTitle').textContent = titles[page];
+
+  // Actualizar contenido según la página
+  if (page === 'confirmados') {
+    checkOutOfScheduleAlerts();
+    // Aplicar el filtro actual si existe
+    if (currentFilter) {
+      filterOrders(currentFilter);
+    }
+  } else if (page === 'tce') {
+    loadTCEOrders();
+    // Aplicar el filtro actual si existe
+    if (currentTCEFilter) {
+      filterTCEOrders(currentTCEFilter);
+    }
+  }
+}
+
+// Función para cargar órdenes TCE en la tabla
+function loadTCEOrders() {
+  const tableBody = document.getElementById('tceTableBody');
+  tableBody.innerHTML = '';
+
+  Object.keys(tceOrdersData).forEach(tceOrderId => {
+    const tceOrder = tceOrdersData[tceOrderId];
+    const row = document.createElement('tr');
+    row.className = 'tce-order-row';
+    row.setAttribute('data-tce-order-id', tceOrderId);
+    row.setAttribute('data-status', tceOrder.status);
+
+    // Determinar la clase del estado
+    let statusClass = '';
+    let statusText = '';
+
+    if (tceOrder.status === 'pending') {
+      statusClass = 'status-derived';
+      statusText = 'Pendiente';
+    } else if (tceOrder.status === 'attended') {
+      statusClass = 'status-attended';
+      statusText = 'Atendido';
+    } else if (tceOrder.status === 'finalized') {
+      statusClass = 'status-finalized';
+      statusText = 'Finalizado';
+    } else if (tceOrder.status === 're-derived') {
+      statusClass = 'status-re-derived';
+      statusText = 'Re-derivado';
+    }
+
+    row.innerHTML = `
+      <td class="order-id">${tceOrder.orderId}</td>
+      <td>${tceOrder.customerName}</td>
+      <td>${tceOrder.derivationReason}</td>
+      <td>${tceOrder.derivationDate} ${tceOrder.derivationTime}</td>
+      <td>${tceOrder.lastUpdateDate} ${tceOrder.lastUpdateTime}</td>
+      <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+      <td>
+        <div class="actions">
+          <button class="action-btn primary" onclick="viewTCEOrderDetail('${tceOrderId}')" title="Ver detalle">
+            <i class="fas fa-eye"></i>
+          </button>
+        </div>
+      </td>
+    `;
+
+    tableBody.appendChild(row);
+  });
+}
+
+// Función para ver detalle de orden TCE
+function viewTCEOrderDetail(tceOrderId) {
+  currentTCEOrderId = tceOrderId;
+  const tceOrder = tceOrdersData[tceOrderId];
+
+  if (tceOrder) {
+    // Datos de la orden
+    document.getElementById('detailOrderId').textContent = tceOrder.orderId;
+    document.getElementById('detailConfirmationMethod').textContent = ordersData[tceOrder.orderId]?.confirmationMethod || '-';
+    document.getElementById('detailWOId').textContent = tceOrder.woId;
+    document.getElementById('detailProduct').textContent = tceOrder.product;
+    document.getElementById('detailActivityType').textContent = tceOrder.activityType;
+    document.getElementById('detailComment').textContent = tceOrder.comment;
+    document.getElementById('detailScheduledDate').textContent = ordersData[tceOrder.orderId]?.scheduledDate || '-';
+    document.getElementById('detailScheduledTime').textContent = ordersData[tceOrder.orderId]?.scheduledTime || '-';
+    
+    // Determinar el estado para mostrar
+    let statusText = tceOrder.status;
+    if (tceOrder.status === 'pending') statusText = 'Pendiente';
+    else if (tceOrder.status === 'attended') statusText = 'Atendido';
+    else if (tceOrder.status === 'finalized') statusText = 'Finalizado';
+    else if (tceOrder.status === 're-derived') statusText = 'Re-derivado';
+    
+    document.getElementById('detailStatus').textContent = statusText;
+    
+    // Cargar acciones disponibles según el estado
+    loadTCEOrderActions(tceOrder.status);
+    
+    // Mostrar u ocultar la pestaña de respuesta TCE según el estado
+    const tceResponseTab = document.getElementById('tceResponseTab');
+    if (tceOrder.status === 'attended' || tceOrder.status === 're-derived' || tceOrder.status === 'finalized') {
+      tceResponseTab.style.display = 'block';
+      // Cargar la información de la respuesta TCE
+      loadTCEResponse(tceOrderId);
+    } else {
+      tceResponseTab.style.display = 'none';
+    }
+    
+    // Cargar el historial
+    loadOrderHistory(tceOrder.history);
+    
+    // Mostrar la pestaña de datos por defecto
+    switchDetailTab('datos');
+    
+    document.getElementById('orderDetailModal').style.display = 'flex';
+  }
+}
+
+// Función para cargar la información de la respuesta TCE
+function loadTCEResponse(tceOrderId) {
+  const tceOrder = tceOrdersData[tceOrderId];
+  
+  if (tceOrder) {
+    // Si hay información de respuesta, la mostramos
+    if (tceOrder.responseDate) {
+      document.getElementById('tceResponseDate').textContent = tceOrder.responseDate;
+      document.getElementById('tceResponseTime').textContent = tceOrder.responseTime || '-';
+      document.getElementById('tceResponseComment').textContent = tceOrder.responseComment || '-';
+      document.getElementById('tceResponseDocument').textContent = tceOrder.responseDocument || '-';
+      
+      // Estado actual
+      let statusText = tceOrder.status;
+      if (tceOrder.status === 'attended') statusText = 'Atendido';
+      else if (tceOrder.status === 're-derived') statusText = 'Re-derivado';
+      else if (tceOrder.status === 'finalized') statusText = 'Finalizado';
+      
+      document.getElementById('tceResponseStatus').textContent = statusText;
+    } else {
+      // Si no hay información de respuesta, mostramos guiones
+      document.getElementById('tceResponseDate').textContent = '-';
+      document.getElementById('tceResponseTime').textContent = '-';
+      document.getElementById('tceResponseComment').textContent = '-';
+      document.getElementById('tceResponseDocument').textContent = '-';
+      document.getElementById('tceResponseStatus').textContent = '-';
+    }
+  }
+}
+
+// Función para cargar acciones disponibles según el estado TCE
+function loadTCEOrderActions(status) {
+  const actionsGrid = document.getElementById('orderActionsGrid');
+  const statusBadge = document.getElementById('orderStatusBadge');
+  actionsGrid.innerHTML = '';
+  
+  // Actualizar el estado en el encabezado
+  statusBadge.className = 'contact-status';
+  
+  if (status === 'pending') {
+    statusBadge.classList.add('pending');
+    statusBadge.textContent = 'Pendiente de respuesta';
+    
+    // Para órdenes pendientes no mostramos acciones
+    actionsGrid.style.display = 'block';
+    actionsGrid.innerHTML = `
+      <div style="text-align: center; color: var(--gray-500); padding: 20px;">
+        <i class="fas fa-clock" style="font-size: 24px; margin-bottom: 10px; display: block;"></i>
+        Esta orden está pendiente de respuesta del TCE. No se pueden realizar acciones hasta que sea atendida.
+      </div>
+    `;
+  } else if (status === 'attended') {
+    statusBadge.classList.add('processing');
+    statusBadge.textContent = 'Atendido por TCE';
+    
+    // Acciones para órdenes atendidas
+    actionsGrid.style.display = 'grid';
+    actionsGrid.innerHTML = `
+      <div class="contact-action-btn success" onclick="finalizeTCEFromDetail()">
+        <i class="fas fa-check"></i>
+        <div class="contact-action-content">
+          <div class="contact-action-title">Finalizar Orden</div>
+          <div class="contact-action-desc">Solucionó la derivación</div>
+        </div>
+      </div>
+      <div class="contact-action-btn warning" onclick="reDeriveToTCEFromDetail()">
+        <i class="fas fa-redo"></i>
+        <div class="contact-action-content">
+          <div class="contact-action-title">Volver a Derivar</div>
+          <div class="contact-action-desc">No se solucionó el problema</div>
+        </div>
+      </div>
+    `;
+  } else if (status === 'finalized') {
+    statusBadge.classList.add('completed');
+    statusBadge.textContent = 'Finalizado';
+    
+    // Para órdenes finalizadas no mostramos acciones
+    actionsGrid.innerHTML = `
+      <div style="text-align: center; color: var(--gray-500); padding: 20px;">
+        <i class="fas fa-check-circle" style="font-size: 24px; margin-bottom: 10px; display: block;"></i>
+        Esta orden ha sido finalizada. No hay acciones disponibles.
+      </div>
+    `;
+  } else if (status === 're-derived') {
+    statusBadge.classList.add('pending');
+    statusBadge.textContent = 'Re-derivado a TCE';
+    
+    // Acciones para órdenes re-derivadas
+    actionsGrid.innerHTML = `
+      <div class="contact-action-btn success" onclick="finalizeTCEFromDetail()">
+        <i class="fas fa-check"></i>
+        <div class="contact-action-content">
+          <div class="contact-action-title">Finalizar Orden</div>
+          <div class="contact-action-desc">Solucionó la derivación</div>
+        </div>
+      </div>
+      <div class="contact-action-btn warning" onclick="reDeriveToTCEFromDetail()">
+        <i class="fas fa-redo"></i>
+        <div class="contact-action-content">
+          <div class="contact-action-title">Volver a Derivar</div>
+          <div class="contact-action-desc">No se solucionó el problema</div>
+        </div>
+      </div>
+    `;
+  }
+}
+
+// Funciones para acciones desde el modal de detalle TCE
+function finalizeTCEFromDetail() {
+  finalizeTCE(currentTCEOrderId);
+}
+
+function reDeriveToTCEFromDetail() {
+  reDeriveToTCE(currentTCEOrderId);
+}
+
+// Función para cambiar pestaña en el modal de detalle
+function switchDetailTab(tabName) {
+  // Ocultar todas las pestañas
+  const tabs = document.querySelectorAll('#orderDetailModal .detail-tab');
+  tabs.forEach(tab => tab.classList.remove('active'));
+
+  const contents = document.querySelectorAll('#orderDetailModal .detail-content');
+  contents.forEach(content => content.classList.remove('active'));
+
+  // Mostrar la pestaña seleccionada
+  if (tabName === 'datos') {
+    document.getElementById('datosTab').classList.add('active');
+    document.getElementById('datos-tab').classList.add('active');
+  } else if (tabName === 'respuesta-tce') {
+    document.getElementById('tceResponseTab').classList.add('active');
+    document.getElementById('respuesta-tce-tab').classList.add('active');
+  } else if (tabName === 'acciones') {
+    document.getElementById('accionesTab').classList.add('active');
+    document.getElementById('acciones-tab').classList.add('active');
+  } else if (tabName === 'historial') {
+    document.getElementById('historialTab').classList.add('active');
+    document.getElementById('historial-tab').classList.add('active');
+  }
+}
+
+// Función para ver detalle de orden
+function viewOrderDetail(orderId) {
+  currentOrderId = orderId;
+  const order = ordersData[orderId];
+
+  if (order) {
+    // Datos de la orden
+    document.getElementById('detailOrderId').textContent = orderId;
+    document.getElementById('detailConfirmationMethod').textContent = order.confirmationMethod;
+    document.getElementById('detailWOId').textContent = order.woId;
+    document.getElementById('detailProduct').textContent = order.product;
+    document.getElementById('detailActivityType').textContent = order.activityType;
+    document.getElementById('detailComment').textContent = order.comment;
+    document.getElementById('detailScheduledDate').textContent = order.scheduledDate;
+    document.getElementById('detailScheduledTime').textContent = order.scheduledTime;
+    
+    // Determinar el estado para mostrar
+    let statusText = order.status;
+    if (order.status === 'pending') statusText = 'Pendiente';
+    else if (order.status === 'processing') statusText = 'En Proceso';
+    else if (order.status === 'completed') statusText = 'Completada';
+    
+    document.getElementById('detailStatus').textContent = statusText;
+    
+    // Cargar acciones disponibles según el estado
+    loadOrderActions(order.status);
+    
+    // Ocultar la pestaña de respuesta TCE para órdenes no TCE
+    document.getElementById('tceResponseTab').style.display = 'none';
+    
+    // Cargar el historial
+    loadOrderHistory(order.history);
+    
+    // Mostrar la pestaña de datos por defecto
+    switchDetailTab('datos');
+    
+    document.getElementById('orderDetailModal').style.display = 'flex';
+  }
+}
+
+// Función para cargar el historial de la orden - Actualizada con el diseño del dealer
+function loadOrderHistory(history) {
+  const timeline = document.getElementById('orderTimeline');
+  timeline.innerHTML = '';
+  
+  if (history && history.length > 0) {
+    history.forEach(event => {
+      const eventElement = document.createElement('div');
+      eventElement.className = `timeline-item ${event.status}`;
+      
+      eventElement.innerHTML = `
+        <div class="timeline-date">${event.date} ${event.time}</div>
+        <div class="timeline-area">Torre de Control</div>
+        <div class="timeline-user">Usuario: ${event.user || 'Sistema'}</div>
+        <div class="timeline-content">${event.title}: ${event.description}</div>
+      `;
+      
+      timeline.appendChild(eventElement);
+    });
+  } else {
+    timeline.innerHTML = `
+      <div class="timeline-item">
+        <div class="timeline-content" style="text-align: center; color: var(--gray-500);">
+          No hay historial disponible para esta orden
+        </div>
+      </div>
+    `;
+  }
+}
+
+// Función para agregar evento al historial
+function addTimelineEvent(orderId, title, description, status = 'completed', user = 'Sistema') {
+  let order = ordersData[orderId];
+  
+  // Si no se encuentra en órdenes regulares, buscar en TCE
+  if (!order) {
+    Object.keys(tceOrdersData).forEach(tceOrderId => {
+      if (tceOrdersData[tceOrderId].orderId === orderId) {
+        order = tceOrdersData[tceOrderId];
+      }
+    });
+  }
+  
+  if (order) {
+    const now = new Date();
+    const dateStr = now.toISOString().split('T')[0];
+    const timeStr = now.toTimeString().split(' ')[0].substring(0, 5);
+    
+    order.history.push({
+      date: dateStr,
+      time: timeStr,
+      title: title,
+      description: description,
+      status: status,
+      user: user
+    });
+    
+    // Si el modal de detalle está abierto, actualizar el historial
+    if (document.getElementById('orderDetailModal').style.display === 'flex') {
+      loadOrderHistory(order.history);
+    }
+  }
+}
+
+// Función para cargar acciones disponibles según el estado
+function loadOrderActions(status) {
+  const actionsGrid = document.getElementById('orderActionsGrid');
+  const statusBadge = document.getElementById('orderStatusBadge');
+  actionsGrid.innerHTML = '';
+  
+  // Actualizar el estado en el encabezado
+  statusBadge.className = 'contact-status';
+  
+  if (status === 'pending') {
+    statusBadge.classList.add('pending');
+    statusBadge.textContent = 'Pendiente de respuesta';
+    
+    // Acciones para órdenes pendientes
+    actionsGrid.innerHTML = `
+      <div class="contact-action-btn primary" onclick="startInstallationFromDetail()">
+        <i class="fas fa-play"></i>
+        <div class="contact-action-content">
+          <div class="contact-action-title">Iniciar Instalación</div>
+          <div class="contact-action-desc">Comenzar el proceso de instalación</div>
+        </div>
+      </div>
+      <div class="contact-action-btn warning" onclick="rescheduleOrderFromDetail()">
+        <i class="fas fa-calendar-alt"></i>
+        <div class="contact-action-content">
+          <div class="contact-action-title">Reprogramar</div>
+          <div class="contact-action-desc">Cambiar fecha y hora</div>
+        </div>
+      </div>
+      <div class="contact-action-btn danger" onclick="cancelOrderFromDetail()">
+        <i class="fas fa-times"></i>
+        <div class="contact-action-content">
+          <div class="contact-action-title">Cancelar Orden</div>
+          <div class="contact-action-desc">Cancelar por falla</div>
+        </div>
+      </div>
+    `;
+  } else if (status === 'processing') {
+    statusBadge.classList.add('processing');
+    statusBadge.textContent = 'En proceso';
+    
+    // Acciones para órdenes en proceso
+    actionsGrid.innerHTML = `
+      <div class="contact-action-btn success" onclick="finishInstallationFromDetail()">
+        <i class="fas fa-check"></i>
+        <div class="contact-action-content">
+          <div class="contact-action-title">Finalizar Instalación</div>
+          <div class="contact-action-desc">Completar el proceso</div>
+        </div>
+      </div>
+      <div class="contact-action-btn tce" onclick="deriveToTCEFromDetail()">
+        <i class="fas fa-user-tie"></i>
+        <div class="contact-action-content">
+          <div class="contact-action-title">Derivar a TCE</div>
+          <div class="contact-action-desc">Percance técnico</div>
+        </div>
+      </div>
+      <div class="contact-action-btn backlog" onclick="deriveToBacklogFromDetail()">
+        <i class="fas fa-archive"></i>
+        <div class="contact-action-content">
+          <div class="contact-action-title">Derivar a Backlog</div>
+          <div class="contact-action-desc">Percance externo</div>
+        </div>
+      </div>
+    `;
+  } else if (status === 'completed') {
+    statusBadge.classList.add('completed');
+    statusBadge.textContent = 'Completada';
+    
+    // Para órdenes completadas no mostramos acciones
+    actionsGrid.innerHTML = `
+      <div style="text-align: center; color: var(--gray-500); padding: 20px;">
+        <i class="fas fa-check-circle" style="font-size: 24px; margin-bottom: 10px; display: block;"></i>
+        Esta orden ha sido completada. No hay acciones disponibles.
+      </div>
+    `;
+  }
+}
+
+// Funciones para acciones desde el modal de detalle
+function startInstallationFromDetail() {
+  startInstallation(currentOrderId);
+}
+
+function finishInstallationFromDetail() {
+  finishInstallation(currentOrderId);
+}
+
+function rescheduleOrderFromDetail() {
+  rescheduleOrder(currentOrderId);
+}
+
+function deriveToTCEFromDetail() {
+  deriveToTCE(currentOrderId);
+}
+
+function deriveToBacklogFromDetail() {
+  deriveToBacklog(currentOrderId);
+}
+
+function cancelOrderFromDetail() {
+  cancelOrder(currentOrderId);
+}
+
+// Función para iniciar instalación
+function startInstallation(orderId) {
+  const order = ordersData[orderId];
+  
+  if (order && order.status === 'pending') {
+    // Actualizar estado de la orden
+    order.status = 'processing';
+    
+    // Agregar evento al historial
+    addTimelineEvent(orderId, 'Instalación iniciada', 'Técnico llegó al domicilio y comenzó la instalación', 'processing', 'Carlos Rodríguez');
+    
+    // Actualizar la tabla
+    const row = document.querySelector(`#confirmadosTableBody .order-row[data-order-id="${orderId}"]`);
+    if (row) {
+      row.setAttribute('data-status', 'processing');
+      const statusCell = row.querySelector('.status-badge');
+      statusCell.className = 'status-badge status-responded';
+      statusCell.textContent = 'En Proceso';
+    }
+    
+    alert(`Instalación de la orden ${orderId} iniciada correctamente.`);
+    
+    // Actualizar acciones en el modal de detalle
+    loadOrderActions('processing');
+  }
+}
+
+// Función para finalizar instalación
+function finishInstallation(orderId) {
+  currentOrderId = orderId;
+  document.getElementById('finishOrderId').textContent = orderId;
+  document.getElementById('finishDocument').value = '';
+  document.getElementById('finishComment').value = '';
+  document.getElementById('fileName').textContent = '';
+  
+  document.getElementById('finishInstallationModal').style.display = 'flex';
+}
+
+// Función para guardar finalización de instalación
+function saveFinishInstallation() {
+  const orderId = document.getElementById('finishOrderId').textContent;
+  const document = document.getElementById('finishDocument').files[0];
+  const comment = document.getElementById('finishComment').value;
+  
+  if (!document) {
+    alert('Por favor adjunte un documento');
+    return;
+  }
+  
+  // Actualizar estado de la orden
+  ordersData[orderId].status = 'completed';
+  
+  // Agregar evento al historial
+  addTimelineEvent(orderId, 'Instalación completada', `Instalación finalizada con éxito. ${comment ? 'Comentario: ' + comment : ''}`, 'completed', 'Carlos Rodríguez');
+  
+  // Actualizar la tabla
+  const row = document.querySelector(`#confirmadosTableBody .order-row[data-order-id="${orderId}"]`);
+  if (row) {
+    row.setAttribute('data-status', 'completed');
+    const statusCell = row.querySelector('.status-badge');
+    statusCell.className = 'status-badge status-completed';
+    statusCell.textContent = 'Completada';
+  }
+  
+  alert(`Instalación de la orden ${orderId} finalizada correctamente.`);
+  
+  closeModal('finishInstallationModal');
+  
+  // Actualizar acciones en el modal de detalle
+  loadOrderActions('completed');
+}
+
+// Función para reprogramar orden
+function rescheduleOrder(orderId) {
+  currentOrderId = orderId;
+  document.getElementById('rescheduleOrderId').textContent = orderId;
+  document.getElementById('rescheduleReason').value = '';
+  document.getElementById('rescheduleComment').value = '';
+  
+  document.getElementById('rescheduleModal').style.display = 'flex';
+}
+
+// Función para guardar reprogramación
+function saveReschedule() {
+  const orderId = document.getElementById('rescheduleOrderId').textContent;
+  const reason = document.getElementById('rescheduleReason').value;
+  const comment = document.getElementById('rescheduleComment').value;
+  
+  if (!reason) {
+    alert('Por favor seleccione un motivo de reprogramación');
+    return;
+  }
+  
+  const reasonText = document.getElementById('rescheduleReason').options[document.getElementById('rescheduleReason').selectedIndex].text;
+  
+  // Agregar evento al historial
+  addTimelineEvent(orderId, 'Orden reprogramada', `Motivo: ${reasonText}. ${comment ? 'Comentario: ' + comment : ''}`, 'completed', 'Carlos Rodríguez');
+  
+  alert(`Orden ${orderId} reprogramada correctamente.\n\nMotivo: ${reasonText}${comment ? '\nComentario: ' + comment : ''}`);
+  
+  closeModal('rescheduleModal');
+}
+
+// Función para derivar a TCE
+function deriveToTCE(orderId) {
+  currentOrderId = orderId;
+  document.getElementById('tceOrderId').textContent = orderId;
+  document.getElementById('tceReasonSelect').value = '';
+  document.getElementById('tceComment').value = '';
+  
+  document.getElementById('deriveToTCEModal').style.display = 'flex';
+}
+
+// Función para guardar derivación a TCE
+function saveDeriveToTCE() {
+  const orderId = document.getElementById('tceOrderId').textContent;
+  const reasonSelect = document.getElementById('tceReasonSelect').value;
+  const comment = document.getElementById('tceComment').value;
+  
+  if (!reasonSelect) {
+    alert('Por favor seleccione un motivo de derivación');
+    return;
+  }
+  
+  // Crear una nueva orden TCE
+  const order = ordersData[orderId];
+  const tceOrderId = 'TCE-' + String(Object.keys(tceOrdersData).length + 1).padStart(3, '0');
+  
+  tceOrdersData[tceOrderId] = {
+    orderId: orderId,
+    customerName: order.customerName,
+    address: order.address,
+    district: order.district,
+    province: order.province,
+    department: order.department,
+    phone: order.phone,
+    woId: order.woId,
+    product: order.product,
+    activityType: order.activityType,
+    derivationReason: document.getElementById('tceReasonSelect').options[document.getElementById('tceReasonSelect').selectedIndex].text,
+    derivationDate: new Date().toISOString().split('T')[0],
+    derivationTime: new Date().toTimeString().split(' ')[0].substring(0, 5),
+    lastUpdateDate: new Date().toISOString().split('T')[0],
+    lastUpdateTime: new Date().toTimeString().split(' ')[0].substring(0, 5),
+    status: 'pending',
+    comment: comment,
+    reDerivationCount: 0,
+    history: [...order.history]
+  };
+  
+  // Agregar evento de derivación al historial
+  addTimelineEvent(orderId, 'Derivada a TCE', `Orden derivada por ${document.getElementById('tceReasonSelect').options[document.getElementById('tceReasonSelect').selectedIndex].text.toLowerCase()}`, 'completed', 'Carlos Rodríguez');
+  
+  const reasonText = document.getElementById('tceReasonSelect').options[document.getElementById('tceReasonSelect').selectedIndex].text;
+  alert(`Orden ${orderId} derivada a TCE correctamente.\n\nMotivo: ${reasonText}${comment ? '\nComentario: ' + comment : ''}`);
+  
+  closeModal('deriveToTCEModal');
+  
+  // Eliminar la orden de la tabla de confirmados
+  const row = document.querySelector(`#confirmadosTableBody .order-row[data-order-id="${orderId}"]`);
+  if (row) {
+    row.remove();
+  }
+  
+  // Si estamos en la página TCE, recargar las órdenes
+  if (currentPage === 'tce') {
+    loadTCEOrders();
+  }
+}
+
+// Función para derivar a Backlog
+function deriveToBacklog(orderId) {
+  currentOrderId = orderId;
+  document.getElementById('backlogOrderId').textContent = orderId;
+  document.getElementById('backlogReasonSelect').value = '';
+  document.getElementById('backlogComment').value = '';
+  
+  document.getElementById('deriveToBacklogModal').style.display = 'flex';
+}
+
+// Función para guardar derivación a Backlog
+function saveDeriveToBacklog() {
+  const orderId = document.getElementById('backlogOrderId').textContent;
+  const reasonSelect = document.getElementById('backlogReasonSelect').value;
+  const comment = document.getElementById('backlogComment').value;
+  
+  if (!reasonSelect) {
+    alert('Por favor seleccione un motivo de derivación');
+    return;
+  }
+  
+  const reasonText = document.getElementById('backlogReasonSelect').options[document.getElementById('backlogReasonSelect').selectedIndex].text;
+  
+  // Agregar evento al historial
+  addTimelineEvent(orderId, 'Derivada a Backlog', `Motivo: ${reasonText}. ${comment ? 'Comentario: ' + comment : ''}`, 'completed', 'Carlos Rodríguez');
+  
+  alert(`Orden ${orderId} derivada a Backlog correctamente.\n\nMotivo: ${reasonText}${comment ? '\nComentario: ' + comment : ''}`);
+  
+  closeModal('deriveToBacklogModal');
+  
+  // Eliminar la orden de la tabla
+  const row = document.querySelector(`#confirmadosTableBody .order-row[data-order-id="${orderId}"]`);
+  if (row) {
+    row.remove();
+  }
+}
+
+// Función para cancelar orden
+function cancelOrder(orderId) {
+  currentOrderId = orderId;
+  document.getElementById('cancelOrderId').textContent = orderId;
+  document.getElementById('cancelReason').value = '';
+  document.getElementById('cancelComment').value = '';
+  
+  document.getElementById('cancelOrderModal').style.display = 'flex';
+}
+
+// Función para guardar cancelación
+function saveCancelOrder() {
+  const orderId = document.getElementById('cancelOrderId').textContent;
+  const reason = document.getElementById('cancelReason').value;
+  const comment = document.getElementById('cancelComment').value;
+  
+  if (!reason) {
+    alert('Por favor seleccione un motivo de cancelación');
+    return;
+  }
+  
+  const reasonText = document.getElementById('cancelReason').options[document.getElementById('cancelReason').selectedIndex].text;
+  
+  // Agregar evento al historial
+  addTimelineEvent(orderId, 'Orden cancelada', `Motivo: ${reasonText}. ${comment ? 'Comentario: ' + comment : ''}`, 'failed', 'Carlos Rodríguez');
+  
+  alert(`Orden ${orderId} cancelada correctamente.\n\nMotivo: ${reasonText}${comment ? '\nComentario: ' + comment : ''}`);
+  
+  closeModal('cancelOrderModal');
+  
+  // Eliminar la orden de la tabla
+  const row = document.querySelector(`#confirmadosTableBody .order-row[data-order-id="${orderId}"]`);
+  if (row) {
+    row.remove();
+  }
+}
+
+// Función para finalizar orden TCE
+function finalizeTCE(tceOrderId) {
+  currentTCEOrderId = tceOrderId;
+  document.getElementById('finalizeOrderId').textContent = tceOrdersData[tceOrderId].orderId;
+  document.getElementById('finalizeDocument').value = '';
+  document.getElementById('finalizeComment').value = '';
+  document.getElementById('finalizeFileName').textContent = '';
+  
+  document.getElementById('finalizeTCEModal').style.display = 'flex';
+}
+
+// Función para guardar finalización de TCE
+function saveFinalizeTCE() {
+  const tceOrderId = document.getElementById('finalizeOrderId').textContent;
+  const document = document.getElementById('finalizeDocument').files[0];
+  const comment = document.getElementById('finalizeComment').value;
+  
+  if (!document) {
+    alert('Por favor adjunte un documento');
+    return;
+  }
+  
+  // Buscar la orden TCE por el ID de la orden original
+  let orderTCEId = null;
+  Object.keys(tceOrdersData).forEach(id => {
+    if (tceOrdersData[id].orderId === tceOrderId) {
+      orderTCEId = id;
+    }
+  });
+  
+  if (orderTCEId) {
+    // Actualizar estado de la orden TCE
+    tceOrdersData[orderTCEId].status = 'finalized';
+    
+    // Actualizar fecha y hora de última actualización
+    const now = new Date();
+    tceOrdersData[orderTCEId].lastUpdateDate = now.toISOString().split('T')[0];
+    tceOrdersData[orderTCEId].lastUpdateTime = now.toTimeString().split(' ')[0].substring(0, 5);
+    
+    // Guardar información de la respuesta TCE (automáticamente se marca como atendido)
+    tceOrdersData[orderTCEId].responseDate = now.toISOString().split('T')[0];
+    tceOrdersData[orderTCEId].responseTime = now.toTimeString().split(' ')[0].substring(0, 5);
+    tceOrdersData[orderTCEId].responseComment = comment;
+    tceOrdersData[orderTCEId].responseDocument = document.name;
+    
+    // Agregar evento al historial
+    addTimelineEvent(tceOrderId, 'Finalizada por TCE', `Orden finalizada. ${comment ? 'Comentario: ' + comment : ''}`, 'completed', 'Técnico TCE');
+    
+    alert(`Orden TCE ${tceOrderId} finalizada correctamente.`);
+    
+    closeModal('finalizeTCEModal');
+    
+    // Recargar la tabla de TCE
+    loadTCEOrders();
+    
+    // Actualizar acciones en el modal de detalle
+    loadTCEOrderActions('finalized');
+    
+    // Si el modal de detalle está abierto, actualizar la pestaña de respuesta TCE
+    if (document.getElementById('orderDetailModal').style.display === 'flex') {
+      loadTCEResponse(orderTCEId);
+    }
+  }
+}
+
+// Función para volver a derivar a TCE
+function reDeriveToTCE(tceOrderId) {
+  currentTCEOrderId = tceOrderId;
+  document.getElementById('reDeriveOrderId').textContent = tceOrdersData[tceOrderId].orderId;
+  document.getElementById('reDeriveReasonSelect').value = '';
+  document.getElementById('reDeriveComment').value = '';
+  
+  document.getElementById('reDeriveToTCEModal').style.display = 'flex';
+}
+
+// Función para guardar re-derivación a TCE
+function saveReDeriveToTCE() {
+  const tceOrderId = document.getElementById('reDeriveOrderId').textContent;
+  const reasonSelect = document.getElementById('reDeriveReasonSelect').value;
+  const comment = document.getElementById('reDeriveComment').value;
+  
+  if (!reasonSelect) {
+    alert('Por favor seleccione un motivo de re-derivación');
+    return;
+  }
+  
+  // Buscar la orden TCE por el ID de la orden original
+  let orderTCEId = null;
+  Object.keys(tceOrdersData).forEach(id => {
+    if (tceOrdersData[id].orderId === tceOrderId) {
+      orderTCEId = id;
+    }
+  });
+  
+  if (orderTCEId) {
+    // Actualizar estado de la orden TCE
+    tceOrdersData[orderTCEId].status = 're-derived';
+    
+    // Incrementar contador de re-derivaciones
+    tceOrdersData[orderTCEId].reDerivationCount += 1;
+    
+    // Actualizar fecha y hora de última actualización
+    const now = new Date();
+    tceOrdersData[orderTCEId].lastUpdateDate = now.toISOString().split('T')[0];
+    tceOrdersData[orderTCEId].lastUpdateTime = now.toTimeString().split(' ')[0].substring(0, 5);
+    
+    // Guardar información de la respuesta TCE (automáticamente se marca como atendido)
+    tceOrdersData[orderTCEId].responseDate = now.toISOString().split('T')[0];
+    tceOrdersData[orderTCEId].responseTime = now.toTimeString().split(' ')[0].substring(0, 5);
+    tceOrdersData[orderTCEId].responseComment = comment;
+    // No se guarda documento en re-derivación
+    
+    // Agregar evento al historial
+    const reasonText = document.getElementById('reDeriveReasonSelect').options[document.getElementById('reDeriveReasonSelect').selectedIndex].text;
+    addTimelineEvent(tceOrderId, 'Re-derivada a TCE', `Motivo: ${reasonText.toLowerCase()}. ${comment ? 'Comentario: ' + comment : ''}`, 'pending', 'Técnico TCE');
+    
+    alert(`Orden TCE ${tceOrderId} vuelta a derivar correctamente.\n\nMotivo: ${reasonText}${comment ? '\nComentario: ' + comment : ''}`);
+    
+    closeModal('reDeriveToTCEModal');
+    
+    // Recargar la tabla de TCE
+    loadTCEOrders();
+    
+    // Actualizar acciones en el modal de detalle
+    loadTCEOrderActions('re-derived');
+    
+    // Si el modal de detalle está abierto, actualizar la pestaña de respuesta TCE
+    if (document.getElementById('orderDetailModal').style.display === 'flex') {
+      loadTCEResponse(orderTCEId);
+    }
+  }
+}
+
+// Función para verificar alertas de órdenes fuera de horario
+function checkOutOfScheduleAlerts() {
+  // Obtener todas las filas de la tabla
+  const rows = document.querySelectorAll('#confirmadosTableBody .order-row');
+  let outOfScheduleCount = 0;
+  
+  rows.forEach(row => {
+    const time = row.getAttribute('data-time');
+    if (isOutOfSchedule(time)) {
+      outOfScheduleCount++;
+    }
+  });
+  
+  if (outOfScheduleCount > 0) {
+    document.getElementById('outOfScheduleAlert').style.display = 'flex';
+    document.getElementById('outOfScheduleCount').textContent = outOfScheduleCount;
+  } else {
+    document.getElementById('outOfScheduleAlert').style.display = 'none';
+  }
+}
+
+// Función para verificar si una hora está fuera del horario definido
+function isOutOfSchedule(time) {
+  // Horario definido: 8:00 a 18:00
+  const [hours, minutes] = time.split(':').map(Number);
+  const totalMinutes = hours * 60 + minutes;
+  
+  // Fuera de horario si es antes de 8:00 (480 minutos) o después de 18:00 (1080 minutos)
+  return totalMinutes < 480 || totalMinutes > 1080;
+}
+
+// Función para actualizar el indicador visual de fuera de horario
+function updateOutOfScheduleIndicator(row, time) {
+  const timeCell = row.querySelector('td:nth-child(5)');
+  
+  // Eliminar indicador existente si lo hay
+  const existingIndicator = timeCell.querySelector('.out-of-schedule-indicator');
+  if (existingIndicator) {
+    existingIndicator.remove();
+  }
+  
+  // Agregar indicador si está fuera de horario
+  if (isOutOfSchedule(time)) {
+    const indicator = document.createElement('span');
+    indicator.className = 'out-of-schedule-indicator';
+    indicator.innerHTML = '<i class="fas fa-exclamation-circle"></i> Fuera de horario';
+    timeCell.appendChild(indicator);
+    row.classList.add('out-of-schedule');
+  } else {
+    row.classList.remove('out-of-schedule');
+  }
+}
+
+// Función para actualizar estadísticas de confirmados
+function updateStats() {
+  const rows = document.querySelectorAll('#confirmadosTableBody .order-row');
+  let pendingCount = 0;
+  let processingCount = 0;
+  let completedCount = 0;
+  let outOfScheduleCount = 0;
+  
+  rows.forEach(row => {
+    const status = row.getAttribute('data-status');
+    const time = row.getAttribute('data-time');
+    
+    if (status === 'pending') pendingCount++;
+    else if (status === 'processing') processingCount++;
+    else if (status === 'completed') completedCount++;
+    
+    if (isOutOfSchedule(time)) {
+      outOfScheduleCount++;
+    }
+  });
+}
+
+// Función para filtrar órdenes de confirmados
+function filterOrders(filter) {
+  // Actualizar el filtro actual
+  currentFilter = filter;
+  
+  const buttons = document.querySelectorAll('.filter-btn');
+  buttons.forEach(btn => btn.classList.remove('active'));
+  event.target.classList.add('active');
+
+  const rows = document.querySelectorAll('#confirmadosTableBody .order-row');
+  
+  rows.forEach(row => {
+    const status = row.getAttribute('data-status');
+    
+    if (filter === 'all') {
+      row.style.display = '';
+    } else if (filter === 'pending' && status === 'pending') {
+      row.style.display = '';
+    } else if (filter === 'processing' && status === 'processing') {
+      row.style.display = '';
+    } else if (filter === 'completed' && status === 'completed') {
+      row.style.display = '';
+    } else {
+      row.style.display = 'none';
+    }
+  });
+}
+
+// Función para filtrar órdenes TCE
+function filterTCEOrders(filter) {
+  // Actualizar el filtro actual
+  currentTCEFilter = filter;
+  
+  const buttons = document.querySelectorAll('#tce-page .filter-btn');
+  buttons.forEach(btn => btn.classList.remove('active'));
+  event.target.classList.add('active');
+
+  const rows = document.querySelectorAll('#tceTableBody .tce-order-row');
+  
+  rows.forEach(row => {
+    const status = row.getAttribute('data-status');
+    
+    if (filter === 'all') {
+      row.style.display = '';
+    } else if (filter === 'pending' && status === 'pending') {
+      row.style.display = '';
+    } else if (filter === 'attended' && status === 'attended') {
+      row.style.display = '';
+    } else if (filter === 're-derived' && status === 're-derived') {
+      row.style.display = '';
+    } else if (filter === 'finalized' && status === 'finalized') {
+      row.style.display = '';
+    } else {
+      row.style.display = 'none';
+    }
+  });
+}
+
+// Función para alternar la visibilidad de los módulos del menú
+function toggleModule(moduleId) {
+  const moduleContent = document.getElementById(moduleId);
+  const moduleArrow = moduleContent.previousElementSibling.querySelector('.module-arrow');
+  
+  // Alternar la clase 'expanded' para mostrar/ocultar el contenido
+  moduleContent.classList.toggle('expanded');
+  
+  // Rotar la flecha
+  moduleArrow.classList.toggle('rotated');
+}
+
+// Función para cerrar modal
+function closeModal(modalId) {
+  document.getElementById(modalId).style.display = 'none';
+}
+
+// Función para actualizar el nombre del archivo seleccionado
+function updateFileName(input) {
+  const fileName = input.files[0]?.name || '';
+  document.getElementById('fileName').textContent = fileName;
+}
+
+// Función para actualizar el nombre del archivo de finalización TCE
+function updateFinalizeFileName(input) {
+  const fileName = input.files[0]?.name || '';
+  document.getElementById('finalizeFileName').textContent = fileName;
+}
+
+// Función para manejar la navegación del menú
+document.querySelectorAll('.menu-item').forEach(item => {
+  item.addEventListener('click', function(e) {
+    e.preventDefault();
+    
+    // Obtener la página a mostrar
+    const page = this.getAttribute('data-page');
+    
+    // Cambiar a la página seleccionada
+    changePage(page);
+  });
+});
+
+// Función para el botón de ver órdenes
+document.getElementById('viewOrdersBtn').addEventListener('click', function() {
+  // Activar el botón de filtro todas
+  const filterButtons = document.querySelectorAll('.filter-btn');
+  filterButtons.forEach(btn => btn.classList.remove('active'));
+  document.querySelector('.filter-btn[onclick="filterOrders(\'all\')"]').classList.add('active');
+
+  // Filtrar todas las órdenes
+  const rows = document.querySelectorAll('#confirmadosTableBody .order-row');
+  rows.forEach(row => {
+    row.style.display = '';
+  });
+
+  // Scroll hasta la tabla
+  document.querySelector('#confirmados-page .main-content').scrollIntoView({ behavior: 'smooth' });
+});
+
+// Función para el botón de ver órdenes fuera de horario
+document.getElementById('viewOutOfScheduleBtn').addEventListener('click', function() {
+  // Activar el botón de filtro pendientes
+  const filterButtons = document.querySelectorAll('.filter-btn');
+  filterButtons.forEach(btn => btn.classList.remove('active'));
+  document.querySelector('.filter-btn[onclick="filterOrders(\'pending\')"]').classList.add('active');
+
+  // Filtrar solo las órdenes pendientes
+  const rows = document.querySelectorAll('#confirmadosTableBody .order-row');
+  rows.forEach(row => {
+    const status = row.getAttribute('data-status');
+    const time = row.getAttribute('data-time');
+    
+    if (status === 'pending' && isOutOfSchedule(time)) {
+      row.style.display = '';
+    } else {
+      row.style.display = 'none';
+    }
+  });
+
+  // Scroll hasta la tabla
+  document.querySelector('#confirmados-page .main-content').scrollIntoView({ behavior: 'smooth' });
+});
+
+// Inicializar la página
+document.addEventListener('DOMContentLoaded', function() {
+  // Mostrar la página confirmados por defecto
+  changePage('confirmados');
+  
+  // Verificar alertas iniciales
+  checkOutOfScheduleAlerts();
+  
+  // Inicializar indicadores visuales de fuera de horario
+  const rows = document.querySelectorAll('#confirmadosTableBody .order-row');
+  rows.forEach(row => {
+    const time = row.getAttribute('data-time');
+    updateOutOfScheduleIndicator(row, time);
+  });
+});
+
+// Cerrar modales al hacer clic fuera
+window.onclick = function(event) {
+  const modals = document.querySelectorAll('.modal');
+  modals.forEach(modal => {
+    if (event.target === modal) {
+      modal.style.display = 'none';
+    }
+  });
+}
+</script>
+</body>
+</html>
