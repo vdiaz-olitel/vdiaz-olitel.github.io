@@ -1,0 +1,3303 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sistema de Gestión - Torre de Control</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+<style>
+/* Estilos base */
+* {
+margin: 0;
+padding: 0;
+box-sizing: border-box;
+font-family: 'Inter', sans-serif;
+}
+
+:root {
+/* Colores adaptados */
+--primary: #2563eb;
+--primary-dark: #1d4ed8;
+--secondary: #f97316;
+--secondary-dark: #ea580c;
+--danger: #ef4444;
+--warning: #f59e0b;
+--success: #10b981;
+--gray-50: #f9fafb;
+--gray-100: #f3f4f6;
+--gray-200: #e5e7eb;
+--gray-300: #d1d5db;
+--gray-400: #9ca3af;
+--gray-500: #6b7280;
+--gray-600: #4b5563;
+--gray-700: #374151;
+--gray-800: #1f2937;
+--gray-900: #111827;
+--v-theme-surface: 255, 255, 255;
+--header-bg: #1a3a5f;
+--header-text: #ffffff;
+--sidebar-bg: #f8fafc;
+--sidebar-border: #e2e8f0;
+--card-bg: #ffffff;
+--card-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+--table-header-bg: #f8fafc;
+--table-border: #e2e8f0;
+--btn-hover: #f1f5f9;
+--sidebar-width: 300px;
+--backlog-color: #8b5cf6;
+--tcp-color: #3b82f6;
+--cierre-color: #10b981;
+--finalizado-color: #6366f1;
+--tce-color: #f97316;
+--tce-pext-color: #8b5cf6;
+--tce-cio-color: #ec4899;
+}
+
+body {
+background-color: var(--gray-50);
+color: var(--gray-900);
+line-height: 1.6;
+display: flex;
+min-height: 100vh;
+}
+
+/* Sidebar Styles */
+.sidebar {
+width: var(--sidebar-width);
+background-color: rgb(47, 51, 73);
+color: var(--header-text);
+padding: 20px 0;
+display: flex;
+flex-direction: column;
+position: fixed;
+height: 100vh;
+overflow-y: auto;
+box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+z-index: 1000;
+}
+
+.sidebar-header {
+padding: 0 20px 30px;
+border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+margin-bottom: 20px;
+}
+
+.sidebar-title {
+font-size: 20px;
+font-weight: 700;
+display: flex;
+align-items: center;
+gap: 10px;
+}
+
+.sidebar-menu {
+flex: 1;
+}
+
+/* Estilos para módulos del menú */
+.menu-module {
+margin-bottom: 8px;
+}
+
+.module-title {
+display: flex;
+align-items: center;
+padding: 12px 20px;
+color: rgba(255, 255, 255, 0.9);
+font-weight: 600;
+cursor: pointer;
+transition: all 0.2s;
+border-left: 3px solid transparent;
+}
+
+.module-title:hover {
+background-color: rgba(255, 255, 255, 0.1);
+color: white;
+}
+
+.module-title i:first-child {
+width: 24px;
+margin-right: 12px;
+text-align: center;
+font-size: 18px;
+}
+
+.module-title span {
+flex: 1;
+}
+
+.module-arrow {
+font-size: 12px;
+transition: transform 0.3s;
+}
+
+.module-arrow.rotated {
+transform: rotate(180deg);
+}
+
+.module-content {
+max-height: 0;
+overflow: hidden;
+transition: max-height 0.3s ease-out;
+background-color: rgba(0, 0, 0, 0.1);
+}
+
+.module-content.expanded {
+max-height: 500px;
+}
+
+.menu-item, .profile {
+display: block;
+padding: 14px 20px;
+color: rgba(255, 255, 255, 0.8);
+text-decoration: none;
+transition: all 0.2s;
+font-weight: 500;
+border-left: 3px solid transparent;
+white-space: nowrap;
+overflow: hidden;
+text-overflow: ellipsis;
+}
+
+.menu-item:hover,.profile:hover {
+background-color: rgba(255, 255, 255, 0.1);
+color: white;
+}
+
+.menu-item.active, .profile.active {
+background-color: rgba(255, 255, 255, 0.15);
+color: white;
+}
+
+.menu-item.active.tce-bandeja {
+border-left-color: var(--tce-color);
+}
+
+.menu-item.active.tce-pext-bandeja {
+border-left-color: var(--tce-pext-color);
+}
+
+.menu-item.active.tce-cio-bandeja {
+border-left-color: var(--tce-cio-color);
+}
+
+.menu-item i, .profile i {
+width: 24px;
+margin-right: 15px;
+text-align: center;
+font-size: 18px;
+}
+
+.sidebar-footer {
+padding: 20px;
+border-top: 1px solid rgba(255, 255, 255, 0.1);
+font-size: 12px;
+color: rgba(255, 255, 255, 0.6);
+text-align: center;
+}
+
+/* Main Content */
+.main-container {
+flex: 1;
+margin-left: var(--sidebar-width);
+padding: 20px;
+display: flex;
+flex-direction: column;
+}
+
+.container {
+max-width: 1400px;
+margin: 0 auto;
+width: 100%;
+}
+
+header {
+background-color: rgb(var(--v-theme-surface));
+border-radius: 12px;
+padding: 24px;
+box-shadow: var(--card-shadow);
+margin-bottom: 24px;
+color: var(--header-text);
+}
+
+.header-top {
+display: flex;
+justify-content: space-between;
+align-items: center;
+margin-bottom: 20px;
+}
+
+.header-title {
+font-size: 28px;
+font-weight: 700;
+color: var(--header-text);
+}
+
+.user-info {
+display: flex;
+align-items: center;
+gap: 12px;
+}
+
+.user-avatar {
+width: 40px;
+height: 40px;
+border-radius: 50%;
+background-color: var(--primary);
+display: flex;
+align-items: center;
+justify-content: center;
+color: white;
+font-weight: 600;
+}
+
+.alert-banner {
+background-color: #fef3c7;
+border-left: 4px solid var(--warning);
+padding: 16px;
+border-radius: 8px;
+display: flex;
+align-items: center;
+gap: 12px;
+margin-bottom: 20px;
+}
+
+.alert-banner i {
+color: var(--warning);
+font-size: 20px;
+}
+
+.alert-text {
+font-weight: 500;
+color: var(--gray-800);
+}
+
+.alert-banner button {
+background-color: var(--warning);
+color: white;
+border: none;
+padding: 6px 12px;
+border-radius: 6px;
+font-weight: 500;
+cursor: pointer;
+margin-left: auto;
+transition: background-color 0.2s;
+}
+
+.alert-banner button:hover {
+background-color: #d97706;
+}
+
+.main-content {
+background-color: var(--card-bg);
+border-radius: 12px;
+box-shadow: var(--card-shadow);
+overflow: hidden;
+border: 1px solid var(--sidebar-border);
+}
+
+.table-header {
+background-color: var(--table-header-bg);
+padding: 20px 24px;
+border-bottom: 1px solid var(--table-border);
+display: flex;
+justify-content: space-between;
+align-items: center;
+}
+
+.table-title {
+font-size: 18px;
+font-weight: 600;
+color: var(--gray-900);
+}
+
+.filter-actions {
+display: flex;
+gap: 12px;
+}
+
+.filter-btn {
+background-color: var(--card-bg);
+border: 1px solid var(--sidebar-border);
+border-radius: 6px;
+padding: 8px 12px;
+display: flex;
+align-items: center;
+gap: 6px;
+cursor: pointer;
+font-size: 14px;
+color: var(--gray-700);
+transition: all 0.2s;
+}
+
+.filter-btn:hover {
+background-color: var(--btn-hover);
+}
+
+.filter-btn.active {
+background-color: var(--primary);
+color: white;
+border-color: var(--primary);
+}
+
+.orders-table {
+width: 100%;
+border-collapse: collapse;
+}
+
+.orders-table th {
+text-align: left;
+padding: 12px 24px;
+font-weight: 600;
+color: var(--gray-600);
+font-size: 14px;
+background-color: var(--table-header-bg);
+border-bottom: 1px solid var(--table-border);
+}
+
+.orders-table td {
+padding: 16px 24px;
+border-bottom: 1px solid var(--table-border);
+}
+
+.orders-table tr:hover {
+background-color: var(--btn-hover);
+}
+
+.order-id {
+font-weight: 600;
+color: var(--primary);
+}
+
+.status-badge {
+display: inline-block;
+padding: 4px 8px;
+border-radius: 4px;
+font-size: 12px;
+font-weight: 500;
+}
+
+.status-pending {
+background-color: rgba(245, 158, 11, 0.1);
+color: var(--warning);
+}
+
+.status-atencion {
+background-color: rgba(37, 99, 235, 0.1);
+color: var(--primary);
+}
+
+.status-cancelled {
+background-color: rgba(239, 68, 68, 0.1);
+color: var(--danger);
+}
+
+.status-escalated {
+background-color: rgba(139, 92, 246, 0.1);
+color: var(--backlog-color);
+}
+
+.status-reprogramacion {
+background-color: rgba(37, 99, 235, 0.1);
+color: var(--primary);
+}
+
+.status-processing {
+background-color: rgba(37, 99, 235, 0.1);
+color: var(--primary);
+}
+
+.status-completed {
+background-color: rgba(16, 185, 129, 0.1);
+color: var(--success);
+}
+
+/* Estados específicos para TCE-CIO */
+.status-cio-pending {
+background-color: rgba(245, 158, 11, 0.1);
+color: var(--warning);
+}
+
+.status-cio-reprogramacion {
+background-color: rgba(37, 99, 235, 0.1);
+color: var(--primary);
+}
+
+.actions {
+display: flex;
+justify-content: center;
+gap: 6px;
+}
+
+.action-btn {
+width: 32px;
+height: 32px;
+border-radius: 6px;
+border: none;
+background-color: var(--gray-100);
+color: var(--gray-600);
+cursor: pointer;
+display: flex;
+align-items: center;
+justify-content: center;
+transition: all 0.2s;
+}
+
+.action-btn:hover {
+background-color: var(--gray-200);
+}
+
+.action-btn.primary {
+background-color: var(--primary);
+color: white;
+}
+
+.action-btn.primary:hover {
+background-color: var(--primary-dark);
+}
+
+.action-btn.success {
+background-color: var(--success);
+color: white;
+}
+
+.action-btn.success:hover {
+background-color: #059669;
+}
+
+.action-btn.warning {
+background-color: var(--warning);
+color: white;
+}
+
+.action-btn.warning:hover {
+background-color: #d97706;
+}
+
+.action-btn.danger {
+background-color: var(--danger);
+color: white;
+}
+
+.action-btn.danger:hover {
+background-color: #dc2626;
+}
+
+/* Modal Styles */
+.modal {
+display: none;
+position: fixed;
+z-index: 1000;
+left: 0;
+top: 0;
+width: 100%;
+height: 100%;
+background-color: rgba(0,0,0,0.5);
+align-items: center;
+justify-content: center;
+}
+
+.modal-content {
+background-color: var(--card-bg);
+border-radius: 12px;
+width: 90%;
+max-width: 800px;
+max-height: 80vh;
+overflow-y: auto;
+box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+border: 1px solid var(--sidebar-border);
+}
+
+.modal-header {
+padding: 20px 30px;
+border-bottom: 1px solid var(--table-border);
+display: flex;
+justify-content: space-between;
+align-items: center;
+background-color: var(--table-header-bg);
+}
+
+.modal-title {
+font-size: 20px;
+font-weight: 600;
+color: var(--gray-900);
+}
+
+.close-btn {
+background: none;
+border: none;
+font-size: 24px;
+color: var(--gray-500);
+cursor: pointer;
+}
+
+.modal-body {
+padding: 30px;
+}
+
+/* Estilos para las pestañas */
+.detail-tabs {
+display: flex;
+border-bottom: 1px solid var(--table-border);
+margin-bottom: 20px;
+flex-wrap: wrap;
+}
+
+.detail-tab {
+padding: 16px 24px;
+cursor: pointer;
+font-weight: 500;
+color: var(--gray-500);
+border-bottom: 2px solid transparent;
+transition: all 0.2s;
+white-space: nowrap;
+}
+
+.detail-tab.active {
+color: var(--primary);
+border-bottom-color: var(--primary);
+}
+
+.detail-content {
+display: none;
+}
+
+.detail-content.active {
+display: block;
+}
+
+/* Estilos para los detalles de la orden */
+.order-details-grid {
+display: grid;
+grid-template-columns: repeat(2, 1fr);
+gap: 20px;
+}
+
+.order-detail-group {
+margin-bottom: 20px;
+}
+
+.order-detail-group h4 {
+font-size: 16px;
+font-weight: 600;
+color: var(--gray-800);
+margin-bottom: 12px;
+padding-bottom: 8px;
+border-bottom: 1px solid var(--gray-200);
+}
+
+.order-detail-row {
+display: flex;
+margin-bottom: 12px;
+}
+
+.order-detail-label {
+width: 140px;
+font-weight: 500;
+color: var(--gray-600);
+}
+
+.order-detail-value {
+flex: 1;
+color: var(--gray-800);
+}
+
+/* Estilos para la sección de acciones */
+.contact-section {
+background-color: var(--btn-hover);
+border-radius: 8px;
+padding: 20px;
+margin-top: 20px;
+border: 1px solid var(--sidebar-border);
+}
+
+.contact-header {
+display: flex;
+justify-content: space-between;
+align-items: center;
+margin-bottom: 16px;
+}
+
+.contact-title {
+font-size: 16px;
+font-weight: 600;
+color: var(--gray-900);
+}
+
+.contact-status {
+font-size: 14px;
+padding: 4px 8px;
+border-radius: 4px;
+font-weight: 500;
+}
+
+.contact-status.pending {
+background-color: rgba(245, 158, 11, 0.1);
+color: var(--warning);
+}
+
+.contact-status.atencion {
+background-color: rgba(37, 99, 235, 0.1);
+color: var(--primary);
+}
+
+.contact-status.completed {
+background-color: rgba(16, 185, 129, 0.1);
+color: var(--success);
+}
+
+.contact-actions {
+display: grid;
+grid-template-columns: repeat(2, 1fr);
+gap: 16px;
+}
+
+.contact-action-btn {
+display: flex;
+align-items: center;
+gap: 12px;
+padding: 16px;
+border-radius: 8px;
+border: 1px solid var(--sidebar-border);
+background-color: var(--card-bg);
+cursor: pointer;
+transition: all 0.2s;
+font-size: 14px;
+}
+
+.contact-action-btn:hover {
+transform: translateY(-2px);
+box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.contact-action-btn i {
+font-size: 24px;
+width: 30px;
+text-align: center;
+}
+
+.contact-action-btn.primary {
+border-left: 4px solid var(--primary);
+}
+
+.contact-action-btn.primary i {
+color: var(--primary);
+}
+
+.contact-action-btn.danger {
+border-left: 4px solid var(--danger);
+}
+
+.contact-action-btn.danger i {
+color: var(--danger);
+}
+
+.contact-action-btn.backlog {
+border-left: 4px solid var(--backlog-color);
+}
+
+.contact-action-btn.backlog i {
+color: var(--backlog-color);
+}
+
+.contact-action-content {
+flex: 1;
+}
+
+.contact-action-title {
+font-weight: 600;
+margin-bottom: 4px;
+color: var(--gray-900);
+}
+
+.contact-action-desc {
+font-size: 12px;
+color: var(--gray-500);
+}
+
+.form-group {
+margin-bottom: 20px;
+}
+
+.form-group label {
+display: block;
+margin-bottom: 8px;
+font-weight: 500;
+color: var(--gray-700);
+}
+
+.form-control {
+width: 100%;
+padding: 10px 14px;
+border: 1px solid var(--sidebar-border);
+border-radius: 6px;
+font-size: 14px;
+transition: border-color 0.2s;
+background-color: var(--card-bg);
+}
+
+.form-control:focus {
+outline: none;
+border-color: var(--primary);
+box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.form-actions {
+display: flex;
+justify-content: flex-end;
+gap: 12px;
+margin-top: 24px;
+}
+
+.btn {
+padding: 10px 16px;
+border-radius: 6px;
+font-weight: 500;
+cursor: pointer;
+border: none;
+font-size: 14px;
+transition: all 0.2s;
+}
+
+.btn-primary {
+background-color: var(--primary);
+color: white;
+}
+
+.btn-primary:hover {
+background-color: var(--primary-dark);
+}
+
+.btn-secondary {
+background-color: var(--card-bg);
+color: var(--gray-700);
+border: 1px solid var(--sidebar-border);
+}
+
+.btn-secondary:hover {
+background-color: var(--btn-hover);
+}
+
+.btn-danger {
+background-color: var(--danger);
+color: white;
+}
+
+.btn-danger:hover {
+background-color: #dc2626;
+}
+
+.btn-warning {
+background-color: var(--warning);
+color: white;
+}
+
+.btn-warning:hover {
+background-color: #d97706;
+}
+
+/* Estilos para el timeline */
+.timeline {
+position: relative;
+padding-left: 30px;
+margin-top: 20px;
+}
+
+.timeline::before {
+content: '';
+position: absolute;
+left: 8px;
+top: 0;
+height: 100%;
+width: 2px;
+background-color: var(--gray-300);
+}
+
+.timeline-item {
+position: relative;
+margin-bottom: 20px;
+}
+
+.timeline-item:last-child {
+margin-bottom: 0;
+}
+
+.timeline-item::before {
+content: '';
+position: absolute;
+left: -30px;
+top: 6px;
+width: 16px;
+height: 16px;
+border-radius: 50%;
+background-color: white;
+border: 2px solid var(--gray-400);
+z-index: 1;
+}
+
+.timeline-item.pending::before {
+border-color: var(--warning);
+}
+
+.timeline-item.atencion::before {
+border-color: var(--primary);
+}
+
+.timeline-item.cancelled::before {
+border-color: var(--danger);
+}
+
+.timeline-item.escalated::before {
+border-color: var(--backlog-color);
+}
+
+.timeline-item.processing::before {
+border-color: var(--primary);
+}
+
+.timeline-item.completed::before {
+border-color: var(--success);
+}
+
+.timeline-item.tcepext::before {
+border-color: var(--tce-pext-color);
+}
+
+.timeline-item.tcecio::before {
+border-color: var(--tce-cio-color);
+}
+
+.timeline-date {
+font-size: 12px;
+color: var(--gray-500);
+margin-bottom: 4px;
+}
+
+.timeline-area {
+font-size: 12px;
+color: var(--primary);
+margin-bottom: 2px;
+font-weight: 500;
+}
+
+.timeline-user {
+font-size: 12px;
+color: var(--gray-600);
+margin-bottom: 4px;
+}
+
+.timeline-content {
+background-color: var(--btn-hover);
+padding: 12px;
+border-radius: 6px;
+}
+
+/* Ajuste para que el modal de respuesta aparezca encima del modal principal */
+.modal-higher {
+z-index: 2000 !important;
+}
+
+/* Media queries para dispositivos móviles */
+@media (max-width: 768px) {
+.sidebar {
+transform: translateX(-100%);
+transition: transform 0.3s ease;
+}
+
+.sidebar.open {
+transform: translateX(0);
+}
+
+.main-container {
+margin-left: 0;
+}
+
+.container {
+padding: 10px;
+}
+
+.header-top {
+flex-direction: column;
+gap: 16px;
+align-items: flex-start;
+}
+
+.table-header {
+flex-direction: column;
+gap: 16px;
+align-items: flex-start;
+}
+
+.orders-table {
+font-size: 14px;
+}
+
+.orders-table th,
+.orders-table td {
+padding: 10px;
+}
+
+.order-details-grid {
+grid-template-columns: 1fr;
+}
+
+.contact-actions {
+grid-template-columns: 1fr;
+}
+
+.contact-action-btn {
+padding: 12px;
+}
+
+.modal-content {
+max-width: 95%;
+}
+
+.detail-tab {
+padding: 12px 16px;
+}
+
+.timeline {
+padding-left: 20px;
+}
+
+.timeline::before {
+left: 5px;
+}
+
+.timeline-item::before {
+left: -14px;
+}
+}
+</style>
+</head>
+<body>
+<!-- Sidebar -->
+<aside class="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-title">
+      <i class="fas fa-satellite-dish"></i>
+      <span>SIO</span>
+    </div>
+  </div>
+
+  <nav class="sidebar-menu">
+    <!-- Módulo Bandejas TCE -->
+    <div class="menu-module">
+      <div class="module-title" onclick="toggleModule('torre-control-bandejas')">
+        <i class="fas fa-tower-observation"></i>
+        <span>Torre de Control</span>
+        <i class="fas fa-chevron-down module-arrow"></i>
+      </div>
+      <div class="module-content expanded" id="torre-control-bandejas">
+        <a href="#" class="menu-item tce-bandeja active" data-page="tce-bandeja">
+          <i class="fas fa-user-tie"></i>
+          <span>TCE</span>
+        </a>
+        <a href="#" class="menu-item tce-pext-bandeja" data-page="tce-pext-bandeja">
+          <i class="fas fa-exclamation-triangle"></i>
+          <span>TCE-PEXT</span>
+        </a>
+        <a href="#" class="menu-item tce-cio-bandeja" data-page="tce-cio-bandeja">
+          <i class="fas fa-cog"></i>
+          <span>TCE-CIO</span>
+        </a>
+      </div>
+      <div class="module-title" onclick="toggleModule('profiles')">
+        <i class="fas fa-tasks"></i>
+        <span>Perfiles</span>
+        <i class="fas fa-chevron-down module-arrow"></i>
+      </div>
+      <div class="module-content" id="profiles">
+        <a href="agendadora-page.html" class="profile">
+          <i class="fas fa-user"></i>
+          <span>Agendadora</span>
+        </a>
+        <a href="contrata-page.html" class="profile">
+          <i class="fas fa-user"></i>
+          <span>Contrata</span>
+        </a>
+        <a href="comercial-page.html" class="profile">
+          <i class="fas fa-user"></i>
+          <span>Comercial</span>
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="sidebar-footer">
+    <p>© 2023 Sistema de Gestión</p>
+    <p>Versión 1.0.0</p>
+  </div>
+</aside>
+
+<!-- Main Content -->
+<main class="main-container">
+<div class="container">
+<header>
+<div class="header-top">
+<h1 class="header-title" id="pageTitle">Bandeja TCE</h1>
+<div class="user-info">
+<span>Contrata: Juan Pérez</span>
+<div class="user-avatar">JP</div>
+</div>
+</div>
+
+<div class="alert-banner" id="alertBanner">
+<i class="fas fa-info-circle"></i>
+<div class="alert-text" id="alertText">
+<strong>Bandeja de órdenes TCE</strong>. Gestiona las órdenes de técnicos de campo y del equipo de trabajo colaborativo.
+</div>
+<button id="viewOrdersBtn">Ver órdenes</button>
+</div>
+</header>
+
+<!-- Contenedor de páginas -->
+<div id="pagesContainer">
+<!-- Página Bandeja TCE -->
+<div id="tce-bandeja-page" class="page-content">
+  <div class="main-content">
+    <div class="table-header">
+      <h2 class="table-title">Bandeja TCE</h2>
+      <div class="filter-actions">
+        <button class="filter-btn active" onclick="filterOrders('all')">
+          <i class="fas fa-list"></i> Todas
+        </button>
+        <button class="filter-btn" onclick="filterOrders('pending')">
+          <i class="fas fa-clock"></i> Pendientes
+        </button>
+        <button class="filter-btn" onclick="filterOrders('atencion')">
+          <i class="fas fa-spinner"></i> En Atención
+        </button>
+        <button class="filter-btn" onclick="filterOrders('cancelled')">
+          <i class="fas fa-times-circle"></i> Canceladas
+        </button>
+        <button class="filter-btn" onclick="filterOrders('escalated')">
+          <i class="fas fa-level-up-alt"></i> Escaladas
+        </button>
+      </div>
+    </div>
+
+    <table class="orders-table">
+      <thead>
+        <tr>
+          <th>N° Orden</th>
+          <th>Cliente</th>
+          <th>Motivo</th>
+          <th>Derivación</th>
+          <th>Fecha Derivación</th>
+          <th>Estado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="tceTableBody">
+        <!-- Las órdenes se cargarán dinámicamente con JavaScript -->
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Página Bandeja TCE-PEXT -->
+<div id="tce-pext-bandeja-page" class="page-content" style="display: none;">
+  <div class="main-content">
+    <div class="table-header">
+      <h2 class="table-title">Bandeja TCE-PEXT</h2>
+      <div class="filter-actions">
+        <button class="filter-btn active" onclick="filterOrders('all')">
+          <i class="fas fa-list"></i> Todas
+        </button>
+        <button class="filter-btn" onclick="filterOrders('pending')">
+          <i class="fas fa-clock"></i> Pendientes
+        </button>
+        <button class="filter-btn" onclick="filterOrders('reprogramacion')">
+          <i class="fas fa-redo"></i> Reprogramación
+        </button>
+      </div>
+    </div>
+
+    <table class="orders-table">
+      <thead>
+        <tr>
+          <th>N° Orden</th>
+          <th>Cliente</th>
+          <th>Motivo Derivación</th>
+          <th>Fecha Derivación</th>
+          <th>Estado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="tcePextTableBody">
+        <!-- Las órdenes se cargarán dinámicamente con JavaScript -->
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Página Bandeja TCE-CIO -->
+<div id="tce-cio-bandeja-page" class="page-content" style="display: none;">
+  <div class="main-content">
+    <div class="table-header">
+      <h2 class="table-title">Bandeja TCE-CIO</h2>
+      <div class="filter-actions">
+        <button class="filter-btn active" onclick="filterOrders('all')">
+          <i class="fas fa-list"></i> Todas
+        </button>
+        <button class="filter-btn" onclick="filterOrders('pending')">
+          <i class="fas fa-clock"></i> Pendientes
+        </button>
+        <button class="filter-btn" onclick="filterOrders('reprogramacion')">
+          <i class="fas fa-redo"></i> Reprogramación
+        </button>
+      </div>
+    </div>
+
+    <table class="orders-table">
+      <thead>
+        <tr>
+          <th>N° Orden</th>
+          <th>Cliente</th>
+          <th>Motivo Derivación</th>
+          <th>Fecha Derivación</th>
+          <th>Estado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="tceCioTableBody">
+        <!-- Las órdenes se cargarán dinámicamente con JavaScript -->
+      </tbody>
+    </table>
+  </div>
+</div>
+</div>
+</main>
+
+<!-- Modal para responder orden (TCE) -->
+<div id="respondOrderTceModal" class="modal modal-higher">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 class="modal-title">Responder Orden: <span id="respondTceOrderId"></span></h3>
+      <button class="close-btn" onclick="closeModal('respondOrderTceModal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <div class="form-check">
+          <input type="checkbox" class="form-check-input" id="respondTceCheck" onchange="updateRespondTceReasons()">
+          <label class="form-check-label" for="respondTceCheck">Marcar como información errónea</label>
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label for="respondTceReason">Motivo:</label>
+        <select id="respondTceReason" class="form-control">
+          <option value="">Seleccione un motivo</option>
+        </select>
+      </div>
+      
+      <div class="form-group">
+        <label for="respondTceComment">Comentario (Opcional):</label>
+        <textarea id="respondTceComment" class="form-control" rows="3" placeholder="Ingrese comentarios adicionales"></textarea>
+      </div>
+      
+      <div class="form-actions">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('respondOrderTceModal')">Cancelar</button>
+        <button type="button" class="btn btn-primary" onclick="saveResponseTce()">Guardar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para ver detalle de orden -->
+<div id="orderDetailModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 class="modal-title">Detalle de Orden: <span id="detailOrderId"></span></h3>
+      <button class="close-btn" onclick="closeModal('orderDetailModal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <!-- Pestañas -->
+      <div class="detail-tabs">
+        <div class="detail-tab active" id="datosTab" onclick="switchDetailTab('datos')">Vista General</div>
+        <div class="detail-tab" id="accionesTab" onclick="switchDetailTab('acciones')">Acciones</div>
+        <div class="detail-tab" id="historialTab" onclick="switchDetailTab('historial')">Historial</div>
+      </div>
+
+      <!-- Contenido de la pestaña Vista General -->
+      <div id="datos-tab" class="detail-content active">
+        <div class="order-details-grid">
+          <div class="order-detail-group">
+            <h4>Información de la Orden</h4>
+            <div class="order-detail-row">
+              <div class="order-detail-label">N° Orden:</div>
+              <div class="order-detail-value" id="detailOrderNumber">-</div>
+            </div>
+            <div class="order-detail-row">
+              <div class="order-detail-label">Cliente:</div>
+              <div class="order-detail-value" id="detailCustomer">-</div>
+            </div>
+            <div class="order-detail-row">
+              <div class="order-detail-label">Motivo:</div>
+              <div class="order-detail-value" id="detailReason">-</div>
+            </div>
+            <div class="order-detail-row">
+              <div class="order-detail-label">Derivación:</div>
+              <div class="order-detail-value" id="detailDerivation">-</div>
+            </div>
+          </div>
+          
+          <div class="order-detail-group">
+            <h4>Información Adicional</h4>
+            <div class="order-detail-row">
+              <div class="order-detail-label">Fecha Derivación:</div>
+              <div class="order-detail-value" id="detailDate">-</div>
+            </div>
+            <div class="order-detail-row">
+              <div class="order-detail-label">Operador:</div>
+              <div class="order-detail-value" id="detailOperator">-</div>
+            </div>
+            <div class="order-detail-row">
+              <div class="order-detail-label">Contrata:</div>
+              <div class="order-detail-value" id="detailContractor">-</div>
+            </div>
+            <div class="order-detail-row">
+              <div class="order-detail-label">Usuario:</div>
+              <div class="order-detail-value" id="detailUser">-</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Contenido de la pestaña Acciones -->
+      <div id="acciones-tab" class="detail-content">
+        <div class="contact-section">
+          <div class="contact-header">
+            <h4 class="contact-title">Acciones Disponibles</h4>
+            <span class="contact-status pending" id="orderStatusBadge">Pendiente de respuesta</span>
+          </div>
+          
+          <div class="contact-actions" id="orderActionsGrid">
+            <!-- Las acciones se cargarán dinámicamente según el estado -->
+          </div>
+        </div>
+      </div>
+      
+      <!-- Contenido de la pestaña Historial -->
+      <div id="historial-tab" class="detail-content">
+        <div class="order-detail-group">
+          <h4>Historial de la Orden</h4>
+          <div class="timeline" id="orderTimeline">
+            <!-- Los eventos del historial se cargarán dinámicamente -->
+          </div>
+        </div>
+      </div>
+      
+      <div class="form-actions">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('orderDetailModal')">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para cancelar orden -->
+<div id="cancelOrderModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 class="modal-title">Cancelar Orden: <span id="cancelOrderId"></span></h3>
+      <button class="close-btn" onclick="closeModal('cancelOrderModal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label for="cancelReason">Motivo de cancelación:</label>
+        <select id="cancelReason" class="form-control">
+          <option value="">Seleccione un motivo</option>
+          <option value="">NAP / Puerto saturado (Sin disponibilidad) Pangeaco</option>
+            <option value="">NAP Robada Pangeaco</option>
+            <option value="">Potencia Atenuada Pangeaco</option>
+            <option value="">Manipulación en NAP / Mufa Pangeaco</option>
+            <option value="">Cámara inundada Entel</option>
+            <option value="">NAP Robada Entel</option>
+            <option value="">Reposición de tapa en camara Entel</option>
+            <option value="">Pernos rodados / Pernos sustraidos Entel</option>
+            <option value="">Cambio de Caja NAP por ausencia de borneras Entel</option>
+            <option value="">Potencia Atenuada Entel</option>
+            <option value="">NAP con rotulo errado / sin rotulo Entel</option>
+        </select>
+      </div>
+      
+      <div class="form-group">
+        <label for="cancelComment">Comentario (Opcional):</label>
+        <textarea id="cancelComment" class="form-control" rows="3" placeholder="Ingrese comentarios adicionales sobre la cancelación"></textarea>
+      </div>
+      
+      <div class="form-actions">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('cancelOrderModal')">Cancelar</button>
+        <button type="button" class="btn btn-danger" onclick="saveCancellation()">Confirmar Cancelación</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para escalar orden -->
+<div id="escalateOrderModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 class="modal-title">Escalar Orden: <span id="escalateOrderId"></span></h3>
+      <button class="close-btn" onclick="closeModal('escalateOrderModal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label for="escalateArea">Área:</label>
+        <select id="escalateArea" class="form-control" onchange="updateTypificationOptions()">
+          <option value="">Seleccione un área</option>
+          <option value="TCE-PEXT">TCE-PEXT</option>
+          <option value="TCE-CIO">TCE-CIO</option>
+        </select>
+      </div>
+      
+      <div class="form-group">
+        <label for="systemCode">Código Sistema (Remedy):</label>
+        <input type="text" id="systemCode" class="form-control" placeholder="Ingrese el código del sistema">
+      </div>
+      
+      <div class="form-group">
+        <label for="typification">Motivo:</label>
+        <select id="typification" class="form-control">
+          <option value="">Seleccione un motivo</option>
+        </select>
+      </div>
+      
+      <div class="form-group">
+        <label for="escalateComment">Comentario (Opcional):</label>
+        <textarea id="escalateComment" class="form-control" rows="3" placeholder="Ingrese comentarios adicionales sobre el escalado"></textarea>
+      </div>
+      
+      <div class="form-actions">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('escalateOrderModal')">Cancelar</button>
+        <button type="button" class="btn btn-warning" onclick="saveEscalation()">Confirmar Escalado</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para responder orden (TCE-PEXT y TCE-CIO) -->
+<div id="respondOrderModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 class="modal-title">Responder Orden: <span id="respondOrderId"></span></h3>
+      <button class="close-btn" onclick="closeModal('respondOrderModal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label for="responseReason">Motivo:</label>
+        <select id="responseReason" class="form-control">
+          <option value="">Seleccione un motivo</option>
+            <option value="">Asignacion nueva NAP / Puerto saturado</option>
+            <option value="">Solución de Potencia Atenuada Pangeaco</option>
+        </select>
+      </div>
+      
+      <div class="form-group">
+        <label for="responseComment">Comentario (Opcional):</label>
+        <textarea id="responseComment" class="form-control" rows="3" placeholder="Ingrese comentarios adicionales sobre la respuesta"></textarea>
+      </div>
+      
+      <div class="form-actions">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('respondOrderModal')">Cancelar</button>
+        <button type="button" class="btn btn-primary" onclick="saveResponse()">Enviar Respuesta</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Datos de ejemplo para las órdenes
+const ordersData = {
+  // Órdenes TCE
+  'TCE-001': {
+    orderNumber: 'TCE-001',
+    customer: 'Juan Pérez',
+    reason: 'Instalación de servicio',
+    derivation: 'Operador Ana García',
+    date: '2023-06-25',
+    time: '09:15',
+    origin: 'Llamada Telefónica',
+    user: 'cliente@ejemplo.com',
+    operator: 'Ana García',
+    contractor: 'Contrata A',
+    status: 'pending',
+    history: [
+      {
+        date: '2023-06-25',
+        time: '09:15',
+        title: 'Orden creada',
+        description: 'Orden generada en el sistema TCE desde llamada telefónica',
+        status: 'completed',
+        user: 'Sistema',
+        area: 'TCE'
+      },
+      {
+        date: '2023-06-25',
+        time: '09:20',
+        title: 'Validación de datos',
+        description: 'Se validaron los datos del cliente y se verificó la disponibilidad de servicio',
+        status: 'completed',
+        user: 'Sistema Automático',
+        area: 'TCE'
+      },
+      {
+        date: '2023-06-25',
+        time: '09:25',
+        title: 'Asignación a operador',
+        description: 'Orden asignada a la operadora Ana García',
+        status: 'completed',
+        user: 'Supervisor TCE',
+        area: 'TCE'
+      },
+      {
+        date: '2023-06-25',
+        time: '09:30',
+        title: 'Notificación al cliente',
+        description: 'Se envió notificación al cliente sobre el estado de su orden',
+        status: 'completed',
+        user: 'Sistema Automático',
+        area: 'TCE'
+      }
+    ]
+  },
+  'TCE-002': {
+    orderNumber: 'TCE-002',
+    customer: 'María López',
+    reason: 'Mantenimiento preventivo',
+    derivation: 'Operador Luis Martínez',
+    date: '2023-06-25',
+    time: '10:30',
+    origin: 'Chat Online',
+    user: 'usuario@dominio.com',
+    operator: 'Luis Martínez',
+    contractor: 'Contrata B',
+    status: 'pending',
+    history: [
+      {
+        date: '2023-06-25',
+        time: '10:30',
+        title: 'Orden creada',
+        description: 'Orden generada en el sistema TCE desde chat online',
+        status: 'completed',
+        user: 'Sistema',
+        area: 'TCE'
+      },
+      {
+        date: '2023-06-25',
+        time: '10:35',
+        title: 'Verificación de historial',
+        description: 'Se verificó el historial de servicios del cliente',
+        status: 'completed',
+        user: 'Sistema Automático',
+        area: 'TCE'
+      },
+      {
+        date: '2023-06-25',
+        time: '10:40',
+        title: 'Asignación a operador',
+        description: 'Orden asignada al operador Luis Martínez',
+        status: 'completed',
+        user: 'Supervisor TCE',
+        area: 'TCE'
+      },
+      {
+        date: '2023-06-25',
+        time: '10:45',
+        title: 'Programación de mantenimiento',
+        description: 'Se programó el mantenimiento preventivo para el cliente',
+        status: 'completed',
+        user: 'Luis Martínez',
+        area: 'TCE'
+      }
+    ]
+  },
+  'TCE-003': {
+    orderNumber: 'TCE-003',
+    customer: 'Carlos Mendoza',
+    reason: 'Reparación de equipo',
+    derivation: 'Operador María Rodríguez',
+    date: '2023-06-24',
+    time: '14:45',
+    origin: 'Email',
+    user: 'contacto@empresa.com',
+    operator: 'María Rodríguez',
+    contractor: 'Contrata C',
+    status: 'atencion',
+    history: [
+      {
+        date: '2023-06-24',
+        time: '14:45',
+        title: 'Orden creada',
+        description: 'Orden generada en el sistema TCE desde correo electrónico',
+        status: 'completed',
+        user: 'Sistema',
+        area: 'TCE'
+      },
+      {
+        date: '2023-06-24',
+        time: '14:50',
+        title: 'Diagnóstico inicial',
+        description: 'Se realizó diagnóstico inicial del problema reportado',
+        status: 'completed',
+        user: 'Sistema Automático',
+        area: 'TCE'
+      },
+      {
+        date: '2023-06-24',
+        time: '14:55',
+        title: 'Asignación a operador',
+        description: 'Orden asignada a la operadora María Rodríguez',
+        status: 'completed',
+        user: 'Supervisor TCE',
+        area: 'TCE'
+      },
+      {
+        date: '2023-06-24',
+        time: '15:00',
+        title: 'Contacto con cliente',
+        description: 'Se contactó al cliente para obtener más detalles sobre el problema',
+        status: 'completed',
+        user: 'María Rodríguez',
+        area: 'TCE'
+      },
+      {
+        date: '2023-06-24',
+        time: '15:05',
+        title: 'Atención iniciada',
+        description: 'Operador ha iniciado la atención de la orden',
+        status: 'completed',
+        user: 'María Rodríguez',
+        area: 'TCE'
+      },
+      {
+        date: '2023-06-24',
+        time: '15:15',
+        title: 'Evaluación técnica',
+        description: 'Se está evaluando la posible causa del fallo del equipo',
+        status: 'processing',
+        user: 'María Rodríguez',
+        area: 'TCE'
+      }
+    ]
+  },
+  'TCE-004': {
+    orderNumber: 'TCE-004',
+    customer: 'Ana García',
+    reason: 'Actualización de software',
+    derivation: 'Operador Carlos López',
+    date: '2023-06-24',
+    time: '16:20',
+    origin: 'App Móvil',
+    user: 'cliente@app.com',
+    operator: 'Carlos López',
+    contractor: 'Contrata A',
+    status: 'cancelled',
+    history: [
+      {
+        date: '2023-06-24',
+        time: '16:20',
+        title: 'Orden creada',
+        description: 'Orden generada en el sistema TCE desde aplicación móvil',
+        status: 'completed',
+        user: 'Sistema',
+        area: 'TCE'
+      },
+      {
+        date: '2023-06-24',
+        time: '16:25',
+        title: 'Verificación de compatibilidad',
+        description: 'Se verificó la compatibilidad del software con el equipo del cliente',
+        status: 'completed',
+        user: 'Sistema Automático',
+        area: 'TCE'
+      },
+      {
+        date: '2023-06-24',
+        time: '16:30',
+        title: 'Asignación a operador',
+        description: 'Orden asignada al operador Carlos López',
+        status: 'completed',
+        user: 'Supervisor TCE',
+        area: 'TCE'
+      },
+      {
+        date: '2023-06-24',
+        time: '16:35',
+        title: 'Contacto con cliente',
+        description: 'Se contactó al cliente para confirmar detalles de la actualización',
+        status: 'completed',
+        user: 'Carlos López',
+        area: 'TCE'
+      },
+      {
+        date: '2023-06-24',
+        time: '16:40',
+        title: 'Atención iniciada',
+        description: 'Operador ha iniciado la atención de la orden',
+        status: 'completed',
+        user: 'Carlos López',
+        area: 'TCE'
+      },
+      {
+        date: '2023-06-24',
+        time: '17:00',
+        title: 'Problema de comunicación',
+        description: 'No se pudo establecer comunicación efectiva con el cliente',
+        status: 'completed',
+        user: 'Carlos López',
+        area: 'TCE'
+      },
+      {
+        date: '2023-06-24',
+        time: '17:10',
+        title: 'Orden cancelada',
+        description: 'Motivo: Cliente no responde. Comentario: Se intentó contactar en 3 ocasiones sin éxito.',
+        status: 'completed',
+        user: 'Carlos López',
+        area: 'TCE'
+      }
+    ]
+  },
+  'TCE-005': {
+    orderNumber: 'TCE-005',
+    customer: 'Luis Fernández',
+    reason: 'Configuración especial',
+    derivation: 'Operador Laura Sánchez',
+    date: '2023-06-23',
+    time: '11:40',
+    origin: 'Llamada Telefónica',
+    user: 'soporte@empresa.com',
+    operator: 'Laura Sánchez',
+    contractor: 'Contrata B',
+    status: 'escalated',
+    history: [
+      {
+        date: '2023-06-23',
+        time: '11:40',
+        title: 'Orden creada',
+        description: 'Orden generada en el sistema TCE desde llamada telefónica',
+        status: 'completed',
+        user: 'Sistema',
+        area: 'TCE'
+      },
+      {
+        date: '2023-06-23',
+        time: '11:45',
+        title: 'Análisis de requerimientos',
+        description: 'Se analizaron los requerimientos especiales del cliente',
+        status: 'completed',
+        user: 'Sistema Automático',
+        area: 'TCE'
+      },
+      {
+        date: '2023-06-23',
+        time: '11:50',
+        title: 'Asignación a operador',
+        description: 'Orden asignada a la operadora Laura Sánchez',
+        status: 'completed',
+        user: 'Supervisor TCE',
+        area: 'TCE'
+      },
+      {
+        date: '2023-06-23',
+        time: '11:55',
+        title: 'Contacto con cliente',
+        description: 'Se contactó al cliente para detallar los requerimientos de configuración',
+        status: 'completed',
+        user: 'Laura Sánchez',
+        area: 'TCE'
+      },
+      {
+        date: '2023-06-23',
+        time: '12:00',
+        title: 'Atención iniciada',
+        description: 'Operador ha iniciado la atención de la orden',
+        status: 'completed',
+        user: 'Laura Sánchez',
+        area: 'TCE'
+      },
+      {
+        date: '2023-06-23',
+        time: '12:30',
+        title: 'Evaluación técnica',
+        description: 'Se evaluó la viabilidad de la configuración solicitada',
+        status: 'completed',
+        user: 'Laura Sánchez',
+        area: 'TCE'
+      },
+      {
+        date: '2023-06-23',
+        time: '13:00',
+        title: 'Detección de limitación',
+        description: 'Se detectó que la configuración solicitada requiere intervención de nivel superior',
+        status: 'completed',
+        user: 'Laura Sánchez',
+        area: 'TCE'
+      },
+      {
+        date: '2023-06-23',
+        time: '13:20',
+        title: 'Orden escalada',
+        description: 'Código Sistema: INC12345. Tipificación: Problema crítico. Comentario: Requiere intervención de nivel 3.',
+        status: 'completed',
+        user: 'Laura Sánchez',
+        area: 'TCE'
+      }
+    ]
+  },
+  
+  // Órdenes TCE-PEXT
+  'PEXT-001': {
+    orderNumber: 'PEXT-001',
+    customer: 'Juan Pérez',
+    address: 'Av. Principal 123, Lima',
+    phone: '987654321',
+    reason: 'Fallo de equipo',
+    date: '2023-06-20',
+    status: 'pending',
+    history: [
+      {
+        date: '2023-06-10',
+        time: '09:30',
+        title: 'Orden creada en TCP',
+        description: 'Orden generada en el sistema TCP',
+        status: 'completed',
+        user: 'Sistema',
+        area: 'TCP'
+      },
+      {
+        date: '2023-06-12',
+        time: '14:20',
+        title: 'Derivada a Backlog',
+        description: 'Orden derivada a backlog por falta de recursos',
+        status: 'completed',
+        user: 'Operador TCP',
+        area: 'Backlog'
+      },
+      {
+        date: '2023-06-15',
+        time: '10:45',
+        title: 'Confirmada',
+        description: 'Orden confirmada y agendada',
+        status: 'completed',
+        user: 'Agendador',
+        area: 'Confirmados'
+      },
+      {
+        date: '2023-06-18',
+        time: '11:30',
+        title: 'Derivada a TCE-PEXT',
+        description: 'Orden derivada a TCE-PEXT por fallo de equipo',
+        status: 'completed',
+        user: 'Técnico',
+        area: 'TCE-PEXT'
+      },
+      {
+        date: '2023-06-20',
+        time: '09:30',
+        title: 'Orden recibida en TCE-PEXT',
+        description: 'Orden generada en el sistema TCE-PEXT',
+        status: 'completed',
+        user: 'Sistema',
+        area: 'TCE-PEXT'
+      }
+    ]
+  },
+  'PEXT-002': {
+    orderNumber: 'PEXT-002',
+    customer: 'María López',
+    address: 'Jr. Secundaria 456, Cusco',
+    phone: '987654322',
+    reason: 'Problema de conexión',
+    date: '2023-06-19',
+    status: 'pending',
+    history: [
+      {
+        date: '2023-06-08',
+        time: '10:15',
+        title: 'Orden creada en TCP',
+        description: 'Orden generada en el sistema TCP',
+        status: 'completed',
+        user: 'Sistema',
+        area: 'TCP'
+      },
+      {
+        date: '2023-06-10',
+        time: '16:30',
+        title: 'Derivada a Backlog',
+        description: 'Orden derivada a backlog por problemas técnicos',
+        status: 'completed',
+        user: 'Operador TCP',
+        area: 'Backlog'
+      },
+      {
+        date: '2023-06-13',
+        time: '11:20',
+        title: 'Confirmada',
+        description: 'Orden confirmada y agendada',
+        status: 'completed',
+        user: 'Agendador',
+        area: 'Confirmados'
+      },
+      {
+        date: '2023-06-16',
+        time: '14:45',
+        title: 'Derivada a TCE-PEXT',
+        description: 'Orden derivada a TCE-PEXT por problema de conexión',
+        status: 'completed',
+        user: 'Técnico',
+        area: 'TCE-PEXT'
+      },
+      {
+        date: '2023-06-19',
+        time: '14:30',
+        title: 'Orden recibida en TCE-PEXT',
+        description: 'Orden generada en el sistema TCE-PEXT',
+        status: 'completed',
+        user: 'Sistema',
+        area: 'TCE-PEXT'
+      }
+    ]
+  },
+  'PEXT-003': {
+    orderNumber: 'PEXT-003',
+    customer: 'Carlos Mendoza',
+    address: 'Av. Central 789, Arequipa',
+    phone: '987654323',
+    reason: 'Falta de infraestructura',
+    date: '2023-06-18',
+    status: 'pending',
+    history: [
+      {
+        date: '2023-06-05',
+        time: '11:45',
+        title: 'Orden creada en TCP',
+        description: 'Orden generada en el sistema TCP',
+        status: 'completed',
+        user: 'Sistema',
+        area: 'TCP'
+      },
+      {
+        date: '2023-06-07',
+        time: '09:20',
+        title: 'Derivada a Backlog',
+        description: 'Orden derivada a backlog por falta de infraestructura',
+        status: 'completed',
+        user: 'Operador TCP',
+        area: 'Backlog'
+      },
+      {
+        date: '2023-06-10',
+        time: '13:15',
+        title: 'Confirmada',
+        description: 'Orden confirmada y agendada',
+        status: 'completed',
+        user: 'Agendador',
+        area: 'Confirmados'
+      },
+      {
+        date: '2023-06-13',
+        time: '10:30',
+        title: 'Derivada a TCE-PEXT',
+        description: 'Orden derivada a TCE-PEXT por falta de infraestructura',
+        status: 'completed',
+        user: 'Técnico',
+        area: 'TCE-PEXT'
+      },
+      {
+        date: '2023-06-18',
+        time: '10:30',
+        title: 'Orden recibida en TCE-PEXT',
+        description: 'Orden generada en el sistema TCE-PEXT',
+        status: 'completed',
+        user: 'Sistema',
+        area: 'TCE-PEXT'
+      }
+    ]
+  },
+  'PEXT-004': {
+    orderNumber: 'PEXT-004',
+    customer: 'Ana García',
+    address: 'Calle Las Flores 101, Trujillo',
+    phone: '987654324',
+    reason: 'Configuración incorrecta',
+    date: '2023-06-17',
+    status: 'pending',
+    history: [
+      {
+        date: '2023-06-02',
+        time: '13:20',
+        title: 'Orden creada en TCP',
+        description: 'Orden generada en el sistema TCP',
+        status: 'completed',
+        user: 'Sistema',
+        area: 'TCP'
+      },
+      {
+        date: '2023-06-04',
+        time: '15:45',
+        title: 'Derivada a Backlog',
+        description: 'Orden derivada a backlog por configuración incorrecta',
+        status: 'completed',
+        user: 'Operador TCP',
+        area: 'Backlog'
+      },
+      {
+        date: '2023-06-07',
+        time: '10:10',
+        title: 'Confirmada',
+        description: 'Orden confirmada y agendada',
+        status: 'completed',
+        user: 'Agendador',
+        area: 'Confirmados'
+      },
+      {
+        date: '2023-06-10',
+        time: '14:30',
+        title: 'Derivada a TCE-PEXT',
+        description: 'Orden derivada a TCE-PEXT por configuración incorrecta',
+        status: 'completed',
+        user: 'Técnico',
+        area: 'TCE-PEXT'
+      },
+      {
+        date: '2023-06-17',
+        time: '11:15',
+        title: 'Orden recibida en TCE-PEXT',
+        description: 'Orden generada en el sistema TCE-PEXT',
+        status: 'completed',
+        user: 'Sistema',
+        area: 'TCE-PEXT'
+      }
+    ]
+  },
+  'PEXT-005': {
+    orderNumber: 'PEXT-005',
+    customer: 'Luis Fernández',
+    address: 'Pasaje Los Pinos 202, Piura',
+    phone: '987654325',
+    reason: 'Requiere visita adicional',
+    date: '2023-06-16',
+    status: 'reprogramacion',
+    history: [
+      {
+        date: '2023-06-01',
+        time: '10:30',
+        title: 'Orden creada en TCP',
+        description: 'Orden generada en el sistema TCP',
+        status: 'completed',
+        user: 'Sistema',
+        area: 'TCP'
+      },
+      {
+        date: '2023-06-03',
+        time: '14:15',
+        title: 'Derivada a Backlog',
+        description: 'Orden derivada a backlog por requerir visita adicional',
+        status: 'completed',
+        user: 'Operador TCP',
+        area: 'Backlog'
+      },
+      {
+        date: '2023-06-06',
+        time: '11:40',
+        title: 'Confirmada',
+        description: 'Orden confirmada y agendada',
+        status: 'completed',
+        user: 'Agendador',
+        area: 'Confirmados'
+      },
+      {
+        date: '2023-06-09',
+        time: '13:20',
+        title: 'Derivada a TCE-PEXT',
+        description: 'Orden derivada a TCE-PEXT por requerir visita adicional',
+        status: 'completed',
+        user: 'Técnico',
+        area: 'TCE-PEXT'
+      },
+      {
+        date: '2023-06-16',
+        time: '13:20',
+        title: 'Orden recibida en TCE-PEXT',
+        description: 'Orden generada en el sistema TCE-PEXT',
+        status: 'completed',
+        user: 'Sistema',
+        area: 'TCE-PEXT'
+      },
+      {
+        date: '2023-06-16',
+        time: '17:45',
+        title: 'Orden enviada a backlog',
+        description: 'Se requiere visita adicional para solucionar el problema',
+        status: 'completed',
+        user: 'Técnico TCE-PEXT',
+        area: 'TCE-PEXT'
+      }
+    ]
+  },
+  
+  // Órdenes TCE-CIO
+  'CIO-001': {
+    orderNumber: 'CIO-001',
+    customer: 'Rosa Martínez',
+    address: 'Calle Los Rosales 321, Chiclayo',
+    phone: '987654326',
+    reason: 'Configuración especial',
+    date: '2023-06-22',
+    status: 'pending',
+    history: [
+      {
+        date: '2023-06-22',
+        time: '10:00',
+        title: 'Orden creada',
+        description: 'Orden generada en el sistema TCE-CIO',
+        status: 'completed',
+        user: 'Sistema',
+        area: 'TCE-CIO'
+      },
+      {
+        date: '2023-06-22',
+        time: '10:15',
+        title: 'Asignación a técnico',
+        description: 'Orden asignada al técnico especializado Carlos Ramírez',
+        status: 'completed',
+        user: 'Supervisor TCE-CIO',
+        area: 'TCE-CIO'
+      },
+      {
+        date: '2023-06-22',
+        time: '11:30',
+        title: 'Análisis inicial',
+        description: 'Se revisaron los parámetros de configuración actuales del cliente',
+        status: 'completed',
+        user: 'Carlos Ramírez',
+        area: 'TCE-CIO'
+      },
+      {
+        date: '2023-06-22',
+        time: '14:45',
+        title: 'Solicitud de información',
+        description: 'Se solicita documentación adicional sobre requisitos específicos del cliente',
+        status: 'completed',
+        user: 'Carlos Ramírez',
+        area: 'TCE-CIO'
+      }
+    ]
+  },
+  'CIO-002': {
+    orderNumber: 'CIO-002',
+    customer: 'Miguel Ángel Ruiz',
+    address: 'Av. La Marina 456, Lima',
+    phone: '987654327',
+    reason: 'Requiere autorización',
+    date: '2023-06-21',
+    status: 'reprogramacion',
+    history: [
+      {
+        date: '2023-06-21',
+        time: '13:20',
+        title: 'Orden creada',
+        description: 'Orden generada en el sistema TCE-CIO',
+        status: 'completed',
+        user: 'Sistema',
+        area: 'TCE-CIO'
+      },
+      {
+        date: '2023-06-21',
+        time: '13:35',
+        title: 'Asignación a técnico',
+        description: 'Orden asignada al técnico especializado Laura Gómez',
+        status: 'completed',
+        user: 'Supervisor TCE-CIO',
+        area: 'TCE-CIO'
+      },
+      {
+        date: '2023-06-21',
+        time: '15:10',
+        title: 'Verificación de permisos',
+        description: 'Se verificaron los permisos actuales del cliente en el sistema',
+        status: 'completed',
+        user: 'Laura Gómez',
+        area: 'TCE-CIO'
+      },
+      {
+        date: '2023-06-21',
+        time: '16:30',
+        title: 'Solicitud de autorización',
+        description: 'Se envió solicitud de autorización al departamento correspondiente',
+        status: 'completed',
+        user: 'Laura Gómez',
+        area: 'TCE-CIO'
+      },
+      {
+        date: '2023-06-21',
+        time: '17:15',
+        title: 'Orden enviada a backlog',
+        description: 'Se requiere autorización para completar la configuración',
+        status: 'completed',
+        user: 'Laura Gómez',
+        area: 'TCE-CIO'
+      }
+    ]
+  },
+  'CIO-003': {
+    orderNumber: 'CIO-003',
+    customer: 'Patricia Jiménez',
+    address: 'Jr. San Martín 789, Iquitos',
+    phone: '987654328',
+    reason: 'Cambio de parámetros',
+    date: '2023-06-20',
+    status: 'pending',
+    history: [
+      {
+        date: '2023-06-20',
+        time: '11:45',
+        title: 'Orden creada',
+        description: 'Orden generada en el sistema TCE-CIO',
+        status: 'completed',
+        user: 'Sistema',
+        area: 'TCE-CIO'
+      },
+      {
+        date: '2023-06-20',
+        time: '12:00',
+        title: 'Asignación a técnico',
+        description: 'Orden asignada al técnico especializado Roberto Sánchez',
+        status: 'completed',
+        user: 'Supervisor TCE-CIO',
+        area: 'TCE-CIO'
+      },
+      {
+        date: '2023-06-20',
+        time: '13:25',
+        title: 'Análisis de parámetros',
+        description: 'Se analizaron los parámetros actuales y los solicitados por el cliente',
+        status: 'completed',
+        user: 'Roberto Sánchez',
+        area: 'TCE-CIO'
+      },
+      {
+        date: '2023-06-20',
+        time: '15:40',
+        title: 'Preparación de cambios',
+        description: 'Se preparó la configuración con los nuevos parámetros',
+        status: 'completed',
+        user: 'Roberto Sánchez',
+        area: 'TCE-CIO'
+      }
+    ]
+  },
+  'CIO-004': {
+    orderNumber: 'CIO-004',
+    customer: 'Javier Soto',
+    address: 'Av. Brasil 234, Tacna',
+    phone: '987654329',
+    reason: 'Configuración avanzada',
+    date: '2023-06-19',
+    status: 'reprogramacion',
+    history: [
+      {
+        date: '2023-06-19',
+        time: '10:15',
+        title: 'Orden creada',
+        description: 'Orden generada en el sistema TCE-CIO',
+        status: 'completed',
+        user: 'Sistema',
+        area: 'TCE-CIO'
+      },
+      {
+        date: '2023-06-19',
+        time: '10:30',
+        title: 'Asignación a técnico',
+        description: 'Orden asignada al técnico especializado Ana Fernández',
+        status: 'completed',
+        user: 'Supervisor TCE-CIO',
+        area: 'TCE-CIO'
+      },
+      {
+        date: '2023-06-19',
+        time: '12:15',
+        title: 'Evaluación de requisitos',
+        description: 'Se evaluaron los requisitos avanzados solicitados por el cliente',
+        status: 'completed',
+        user: 'Ana Fernández',
+        area: 'TCE-CIO'
+      },
+      {
+        date: '2023-06-19',
+        time: '14:20',
+        title: 'Detección de incompatibilidad',
+        description: 'Se detectó incompatibilidad con la infraestructura actual del cliente',
+        status: 'completed',
+        user: 'Ana Fernández',
+        area: 'TCE-CIO'
+      },
+      {
+        date: '2023-06-19',
+        time: '15:45',
+        title: 'Resolución de incompatibilidad',
+        description: 'Se resolvió la incompatibilidad con ajustes en la configuración',
+        status: 'completed',
+        user: 'Ana Fernández',
+        area: 'TCE-CIO'
+      },
+      {
+        date: '2023-06-19',
+        time: '16:30',
+        title: 'Implementación de cambios',
+        description: 'Se implementaron los cambios de configuración avanzada',
+        status: 'completed',
+        user: 'Ana Fernández',
+        area: 'TCE-CIO'
+      },
+      {
+        date: '2023-06-19',
+        time: '17:00',
+        title: 'Pruebas y validación',
+        description: 'Se realizaron pruebas y validación de la configuración',
+        status: 'completed',
+        user: 'Ana Fernández',
+        area: 'TCE-CIO'
+      },
+      {
+        date: '2023-06-19',
+        time: '17:30',
+        title: 'Orden enviada a backlog',
+        description: 'Se requiere ajuste adicional en la configuración',
+        status: 'completed',
+        user: 'Ana Fernández',
+        area: 'TCE-CIO'
+      }
+    ]
+  },
+  'CIO-005': {
+    orderNumber: 'CIO-005',
+    customer: 'Laura Ramírez',
+    address: 'Calle Comercio 567, Pucallpa',
+    phone: '987654330',
+    reason: 'Ajuste de sistema',
+    date: '2023-06-18',
+    status: 'pending',
+    history: [
+      {
+        date: '2023-06-18',
+        time: '09:30',
+        title: 'Orden creada',
+        description: 'Orden generada en el sistema TCE-CIO',
+        status: 'completed',
+        user: 'Sistema',
+        area: 'TCE-CIO'
+      },
+      {
+        date: '2023-06-18',
+        time: '09:45',
+        title: 'Asignación a técnico',
+        description: 'Orden asignada al técnico especializado Mario Vargas',
+        status: 'completed',
+        user: 'Supervisor TCE-CIO',
+        area: 'TCE-CIO'
+      },
+      {
+        date: '2023-06-18',
+        time: '11:20',
+        title: 'Diagnóstico inicial',
+        description: 'Se realizó diagnóstico del sistema para identificar ajustes necesarios',
+        status: 'completed',
+        user: 'Mario Vargas',
+        area: 'TCE-CIO'
+      },
+      {
+        date: '2023-06-18',
+        time: '13:45',
+        title: 'Pruebas de ajuste',
+        description: 'Se iniciaron pruebas de ajuste en entorno controlado',
+        status: 'completed',
+        user: 'Mario Vargas',
+        area: 'TCE-CIO'
+      }
+    ]
+  }
+};
+
+// Variable global para la orden actual
+let currentOrderId = null;
+let currentPage = 'tce-bandeja';
+let currentFilter = 'all';
+
+// Función para cambiar de página
+function changePage(page) {
+  // Ocultar todas las páginas
+  document.querySelectorAll('.page-content').forEach(p => {
+    p.style.display = 'none';
+  });
+
+  // Mostrar la página seleccionada
+  document.getElementById(`${page}-page`).style.display = 'block';
+
+  // Actualizar el menú activo
+  document.querySelectorAll('.menu-item').forEach(item => {
+    item.classList.remove('active');
+  });
+  document.querySelector(`.menu-item[data-page="${page}"]`).classList.add('active');
+
+  // Actualizar la página actual
+  currentPage = page;
+
+  // Actualizar el título según la página
+  const titles = {
+    'tce-bandeja': 'Bandeja TCE',
+    'tce-pext-bandeja': 'Bandeja TCE-PEXT',
+    'tce-cio-bandeja': 'Bandeja TCE-CIO'
+  };
+
+  document.getElementById('pageTitle').textContent = titles[page];
+  
+  // Actualizar el texto del banner según la página
+  const bannerTexts = {
+    'tce-bandeja': '<strong>Bandeja de órdenes TCE</strong>. Gestiona las órdenes de técnicos de campo y del equipo de trabajo colaborativo.',
+    'tce-pext-bandeja': '<strong>Bandeja de órdenes TCE-PEXT</strong>. Visualiza y gestiona las órdenes con problemas externos.',
+    'tce-cio-bandeja': '<strong>Bandeja de órdenes TCE-CIO</strong>. Visualiza y gestiona las órdenes que requieren configuración especial.'
+  };
+
+  document.getElementById('alertText').innerHTML = bannerTexts[page];
+  
+  // Cargar las órdenes correspondientes a la página
+  loadOrdersForPage(page);
+}
+
+// Función para cargar las órdenes según la página
+function loadOrdersForPage(page) {
+  let tableBodyId;
+  let orderPrefix;
+  
+  if (page === 'tce-bandeja') {
+    tableBodyId = 'tceTableBody';
+    orderPrefix = 'TCE';
+  } else if (page === 'tce-pext-bandeja') {
+    tableBodyId = 'tcePextTableBody';
+    orderPrefix = 'PEXT';
+  } else if (page === 'tce-cio-bandeja') {
+    tableBodyId = 'tceCioTableBody';
+    orderPrefix = 'CIO';
+  } else {
+    return;
+  }
+  
+  const tableBody = document.getElementById(tableBodyId);
+  tableBody.innerHTML = '';
+  
+  // Filtrar y cargar las órdenes correspondientes
+  Object.keys(ordersData).forEach(orderId => {
+    if (orderId.startsWith(orderPrefix)) {
+      const order = ordersData[orderId];
+      
+      // Determinar clase y texto de estado según el tipo de orden
+      let statusClass, statusText;
+      
+      if (orderPrefix === 'TCE') {
+        switch(order.status) {
+          case 'pending':
+            statusClass = 'status-pending';
+            statusText = 'Pendiente';
+            break;
+          case 'atencion':
+            statusClass = 'status-atencion';
+            statusText = 'En Atención';
+            break;
+          case 'cancelled':
+            statusClass = 'status-cancelled';
+            statusText = 'Cancelado';
+            break;
+          case 'escalated':
+            statusClass = 'status-escalated';
+            statusText = 'Escalado';
+            break;
+          default:
+            statusClass = 'status-pending';
+            statusText = 'Pendiente';
+        }
+      } else if (orderPrefix === 'PEXT') {
+        switch(order.status) {
+          case 'pending':
+            statusClass = 'status-pending';
+            statusText = 'Pendiente';
+            break;
+          case 'reprogramacion':
+            statusClass = 'status-reprogramacion';
+            statusText = 'Reprogramación';
+            break;
+          default:
+            statusClass = 'status-pending';
+            statusText = 'Pendiente';
+        }
+      } else if (orderPrefix === 'CIO') {
+        switch(order.status) {
+          case 'pending':
+            statusClass = 'status-cio-pending';
+            statusText = 'Pendiente';
+            break;
+          case 'reprogramacion':
+            statusClass = 'status-cio-reprogramacion';
+            statusText = 'Reprogramación';
+            break;
+          default:
+            statusClass = 'status-cio-pending';
+            statusText = 'Pendiente';
+        }
+      }
+      
+      const row = document.createElement('tr');
+      row.className = 'order-row';
+      row.setAttribute('data-order-id', orderId);
+      row.setAttribute('data-status', order.status);
+      
+      if (orderPrefix === 'TCE') {
+        row.innerHTML = `
+          <td class="order-id">${order.orderNumber}</td>
+          <td>${order.customer}</td>
+          <td>${order.reason}</td>
+          <td>${order.derivation}</td>
+          <td>${order.date}</td>
+          <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+          <td>
+            <div class="actions">
+              <button class="action-btn primary" onclick="viewOrderDetail('${orderId}')" title="Ver detalle">
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
+          </td>
+        `;
+      } else {
+        row.innerHTML = `
+          <td class="order-id">${order.orderNumber}</td>
+          <td>${order.customer}</td>
+          <td>${order.reason}</td>
+          <td>${order.date}</td>
+          <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+          <td>
+            <div class="actions">
+              <button class="action-btn primary" onclick="viewOrderDetail('${orderId}')" title="Ver detalle">
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
+          </td>
+        `;
+      }
+      
+      tableBody.appendChild(row);
+    }
+  });
+  
+  // Aplicar el filtro actual
+  if (currentFilter !== 'all') {
+    filterOrders(currentFilter);
+  }
+}
+
+// Función para ver detalle de orden
+function viewOrderDetail(orderId) {
+  currentOrderId = orderId;
+  const order = ordersData[orderId];
+
+  if (order) {
+    // Datos de la orden
+    document.getElementById('detailOrderId').textContent = order.orderNumber;
+    
+    // Mostrar información relevante según la página
+    if (currentPage === 'tce-bandeja') {
+      document.getElementById('detailOrderNumber').textContent = order.orderNumber;
+      document.getElementById('detailCustomer').textContent = order.customer;
+      document.getElementById('detailReason').textContent = order.reason;
+      document.getElementById('detailDerivation').textContent = order.derivation;
+      document.getElementById('detailDate').textContent = order.date;
+      document.getElementById('detailOperator').textContent = order.operator;
+      document.getElementById('detailContractor').textContent = order.contractor;
+      document.getElementById('detailUser').textContent = order.user;
+    } else {
+      document.getElementById('detailOrderNumber').textContent = order.orderNumber;
+      document.getElementById('detailCustomer').textContent = order.customer;
+      document.getElementById('detailReason').textContent = order.reason;
+      document.getElementById('detailDerivation').textContent = order.operator || '-';
+      document.getElementById('detailDate').textContent = order.date;
+      document.getElementById('detailOperator').textContent = order.operator || '-';
+      document.getElementById('detailContractor').textContent = order.contractor || '-';
+      document.getElementById('detailUser').textContent = order.phone;
+    }
+    
+    // Determinar el estado para mostrar
+    let statusText = order.status;
+    if (order.status === 'pending') statusText = 'Pendiente';
+    else if (order.status === 'atencion') statusText = 'En Atención';
+    else if (order.status === 'cancelled') statusText = 'Cancelado';
+    else if (order.status === 'escalated') statusText = 'Escalado';
+    else if (order.status === 'reprogramacion') statusText = 'Reprogramación';
+    else if (order.status === 'processing') statusText = 'En Proceso';
+    else if (order.status === 'completed') statusText = 'Completado';
+    
+    // Cargar acciones disponibles según el estado
+    loadOrderActions(order.status);
+    
+    // Cargar el historial
+    loadOrderHistory(order.history);
+    
+    // Mostrar la pestaña de datos por defecto
+    switchDetailTab('datos');
+    
+    document.getElementById('orderDetailModal').style.display = 'flex';
+  }
+}
+
+// Función para cargar acciones disponibles según el estado
+function loadOrderActions(status) {
+  const actionsGrid = document.getElementById('orderActionsGrid');
+  const statusBadge = document.getElementById('orderStatusBadge');
+  actionsGrid.innerHTML = '';
+  
+  // Actualizar el estado en el encabezado
+  statusBadge.className = 'contact-status';
+  
+  if (currentPage === 'tce-bandeja') {
+    if (status === 'pending') {
+      statusBadge.classList.add('pending');
+      statusBadge.textContent = 'Pendiente de respuesta';
+      
+      // Acciones para órdenes pendientes
+      actionsGrid.style.display = 'grid';
+      actionsGrid.innerHTML = `
+        <div class="contact-action-btn primary" onclick="startAttention()">
+          <i class="fas fa-play"></i>
+          <div class="contact-action-content">
+            <div class="contact-action-title">Iniciar Atención</div>
+            <div class="contact-action-desc">Comenzar a atender esta orden</div>
+          </div>
+        </div>
+      `;
+    } else if (status === 'atencion') {
+      statusBadge.classList.add('atencion');
+      statusBadge.textContent = 'En atención';
+      
+      // Acciones para órdenes en atención
+      actionsGrid.style.display = 'grid';
+      actionsGrid.innerHTML = `
+        <div class="contact-action-btn danger" onclick="openCancelModal()">
+          <i class="fas fa-times"></i>
+          <div class="contact-action-content">
+            <div class="contact-action-title">Cancelar</div>
+            <div class="contact-action-desc">Cancelar la orden</div>
+          </div>
+        </div>
+        <div class="contact-action-btn backlog" onclick="openEscalateModal()">
+          <i class="fas fa-level-up-alt"></i>
+          <div class="contact-action-content">
+            <div class="contact-action-title">Escalar</div>
+            <div class="contact-action-desc">Escalar orden a nivel superior</div>
+          </div>
+        </div>
+        <div class="contact-action-btn primary" onclick="openResponseModalForTce()">
+          <i class="fas fa-reply"></i>
+          <div class="contact-action-content">
+            <div class="contact-action-title">Responder</div>
+            <div class="contact-action-desc">Registrar respuesta al cliente</div>
+          </div>
+        </div>
+      `;
+    } else if (status === 'cancelled') {
+      statusBadge.classList.add('completed');
+      statusBadge.textContent = 'Cancelada';
+      
+      // Para órdenes canceladas
+      actionsGrid.style.display = 'block';
+      actionsGrid.innerHTML = `
+        <div style="text-align: center; color: var(--gray-500); padding: 20px;">
+          <i class="fas fa-times-circle" style="font-size: 24px; margin-bottom: 10px; display: block;"></i>
+          Esta orden ha sido cancelada. No hay acciones disponibles.
+        </div>
+      `;
+    } else if (status === 'escalated') {
+      statusBadge.classList.add('completed');
+      statusBadge.textContent = 'Escalada';
+      
+      // Para órdenes escaladas
+      actionsGrid.style.display = 'block';
+      actionsGrid.innerHTML = `
+        <div style="text-align: center; color: var(--gray-500); padding: 20px;">
+          <i class="fas fa-level-up-alt" style="font-size: 24px; margin-bottom: 10px; display: block;"></i>
+          Esta orden ha sido escalada. No hay acciones disponibles.
+        </div>
+      `;
+    }
+  } else if (currentPage === 'tce-pext-bandeja' || currentPage === 'tce-cio-bandeja') {
+    if (status === 'pending') {
+      statusBadge.classList.add('pending');
+      statusBadge.textContent = 'Pendiente de respuesta';
+      
+      // Acciones para órdenes pendientes
+      actionsGrid.style.display = 'grid';
+      actionsGrid.innerHTML = `
+        <div class="contact-action-btn primary" onclick="openResponseModal()">
+          <i class="fas fa-reply"></i>
+          <div class="contact-action-content">
+            <div class="contact-action-title">Enviar a Backlog</div>
+            <div class="contact-action-desc">Derivar orden para reprogramación</div>
+          </div>
+        </div>
+      `;
+    } else if (status === 'reprogramacion') {
+      statusBadge.classList.add('pending');
+      statusBadge.textContent = 'En reprogramación';
+      
+      // Para órdenes en reprogramación
+      actionsGrid.style.display = 'block';
+      actionsGrid.innerHTML = `
+        <div style="text-align: center; color: var(--gray-500); padding: 20px;">
+          <i class="fas fa-redo" style="font-size: 24px; margin-bottom: 10px; display: block;"></i>
+          Esta orden está en proceso de reprogramación. No hay acciones disponibles.
+        </div>
+      `;
+    }
+  }
+}
+
+// Función para abrir modal de respuesta para TCE
+function openResponseModalForTce() {
+  document.getElementById('respondTceOrderId').textContent = currentOrderId;
+  document.getElementById('respondTceCheck').checked = false;
+  document.getElementById('respondTceReason').value = '';
+  document.getElementById('respondTceComment').value = '';
+  
+  // Limpiar opciones de motivo
+  document.getElementById('respondTceReason').innerHTML = '<option value="">Seleccione un motivo</option>';
+  
+  document.getElementById('respondOrderTceModal').style.display = 'flex';
+}
+
+// Función para actualizar las opciones de motivo según el checkbox
+function updateRespondTceReasons() {
+  const isChecked = document.getElementById('respondTceCheck').checked;
+  const reasonSelect = document.getElementById('respondTceReason');
+  
+  // Limpiar opciones actuales
+  reasonSelect.innerHTML = '<option value="">Seleccione un motivo</option>';
+  
+  if (isChecked) {
+    // Opciones cuando el checkbox está marcado
+    const options = [
+      { value: 'datos-cliente-incorrectos', text: 'Datos del cliente incorrectos' },
+      { value: 'direccion-fallida', text: 'Dirección fallida' },
+      { value: 'contacto-incorrecto', text: 'Teléfono de contacto incorrecto' },
+      { value: 'documento-invalido', text: 'Documento de identidad inválido' }
+    ];
+    
+    options.forEach(option => {
+      const optionElement = document.createElement('option');
+      optionElement.value = option.value;
+      optionElement.textContent = option.text;
+      reasonSelect.appendChild(optionElement);
+    });
+  } else {
+    // Opciones cuando el checkbox no está marcado
+    const options = [
+      { value: 'informacion-incompleta', text: 'Información incompleta' },
+      { value: 'datos-no-verificados', text: 'Datos no verificados' },
+      { value: 'documentacion-pendiente', text: 'Documentación pendiente' },
+      { value: 'requiere-validacion', text: 'Requiere validación adicional' }
+    ];
+    
+    options.forEach(option => {
+      const optionElement = document.createElement('option');
+      optionElement.value = option.value;
+      optionElement.textContent = option.text;
+      reasonSelect.appendChild(optionElement);
+    });
+  }
+}
+
+// Función para guardar respuesta para TCE
+function saveResponseTce() {
+  const orderId = document.getElementById('respondTceOrderId').textContent;
+  const isChecked = document.getElementById('respondTceCheck').checked;
+  const reason = document.getElementById('respondTceReason').value;
+  const comment = document.getElementById('respondTceComment').value;
+  
+  if (!isChecked || !reason) {
+    alert('Por favor marque el checkbox y seleccione un motivo');
+    return;
+  }
+  
+  // Obtener el texto del motivo seleccionado
+  const reasonText = document.getElementById('respondTceReason').options[document.getElementById('respondTceReason').selectedIndex].text;
+  
+  // Agregar evento al historial
+  const now = new Date();
+  const dateStr = now.toISOString().split('T')[0];
+  const timeStr = now.toTimeString().split(' ')[0].substring(0, 5);
+  
+  ordersData[orderId].history.push({
+    date: dateStr,
+    time: timeStr,
+    title: 'Respuesta registrada',
+    description: `Respuesta marcada como ${isChecked ? 'información errónea' : 'información adicional'}. Motivo: ${reasonText}. ${comment ? 'Comentario: ' + comment : ''}`,
+    status: 'completed',
+    user: ordersData[orderId].operator,
+    area: 'TCE'
+  });
+  
+  alert(`Respuesta registrada correctamente para la orden ${orderId}.\n\nMotivo: ${reasonText}${comment ? '\nComentario: ' + comment : ''}`);
+  
+  closeModal('respondOrderTceModal');
+  closeModal('orderDetailModal');
+  
+  // Actualizar el historial en el modal
+  loadOrderHistory(ordersData[orderId].history);
+}
+
+// Función para iniciar atención
+function startAttention() {
+  const orderId = currentOrderId;
+  
+  // Actualizar estado de la orden a "atencion" o "processing" según la página
+  let newStatus = 'atencion';
+  if (currentPage === 'tce-cio-bandeja') {
+    newStatus = 'reprogramacion';
+  }
+  
+  ordersData[orderId].status = newStatus;
+  
+  // Agregar evento al historial
+  const now = new Date();
+  const dateStr = now.toISOString().split('T')[0];
+  const timeStr = now.toTimeString().split(' ')[0].substring(0, 5);
+  
+  let area = '';
+  if (currentPage === 'tce-bandeja') {
+    area = 'TCE';
+  } else if (currentPage === 'tce-pext-bandeja') {
+    area = 'TCE-PEXT';
+  } else if (currentPage === 'tce-cio-bandeja') {
+    area = 'TCE-CIO';
+  }
+  
+  ordersData[orderId].history.push({
+    date: dateStr,
+    time: timeStr,
+    title: 'Atención iniciada',
+    description: 'Operador ha iniciado la atención de la orden',
+    status: 'completed',
+    user: ordersData[orderId].operator,
+    area: area
+  });
+  
+  // Actualizar la tabla
+  let tableBodyId;
+  if (currentPage === 'tce-bandeja') {
+    tableBodyId = 'tceTableBody';
+  } else if (currentPage === 'tce-pext-bandeja') {
+    tableBodyId = 'tcePextTableBody';
+  } else if (currentPage === 'tce-cio-bandeja') {
+    tableBodyId = 'tceCioTableBody';
+  }
+  
+  const row = document.querySelector(`#${tableBodyId} .order-row[data-order-id="${orderId}"]`);
+  if (row) {
+    row.setAttribute('data-status', newStatus);
+    const statusCell = row.querySelector('.status-badge');
+    
+    // Actualizar clase y texto del estado
+    if (currentPage === 'tce-bandeja') {
+      statusCell.className = 'status-badge status-atencion';
+      statusCell.textContent = 'En Atención';
+    } else if (currentPage === 'tce-cio-bandeja') {
+      statusCell.className = 'status-badge status-cio-reprogramacion';
+      statusCell.textContent = 'Reprogramación';
+    }
+  }
+  
+  alert(`Atención iniciada para la orden ${orderId}`);
+  
+  // Actualizar el modal
+  loadOrderActions(newStatus);
+  loadOrderHistory(ordersData[orderId].history);
+}
+
+// Función para abrir modal de cancelación
+function openCancelModal() {
+  document.getElementById('cancelOrderId').textContent = currentOrderId;
+  document.getElementById('cancelReason').value = '';
+  document.getElementById('cancelComment').value = '';
+  
+  document.getElementById('cancelOrderModal').style.display = 'flex';
+}
+
+// Función para abrir modal de escalado
+function openEscalateModal() {
+  document.getElementById('escalateOrderId').textContent = currentOrderId;
+  document.getElementById('escalateArea').value = '';
+  document.getElementById('systemCode').value = '';
+  document.getElementById('typification').value = '';
+  document.getElementById('escalateComment').value = '';
+  
+  // Limpiar opciones de tipificación
+  document.getElementById('typification').innerHTML = '<option value="">Seleccione un motivo</option>';
+  
+  document.getElementById('escalateOrderModal').style.display = 'flex';
+}
+
+// Función para actualizar las opciones de tipificación según el área
+function updateTypificationOptions() {
+  const area = document.getElementById('escalateArea').value;
+  const typificationSelect = document.getElementById('typification');
+  
+  // Limpiar opciones actuales
+  typificationSelect.innerHTML = '<option value="">Seleccione un motivo</option>';
+  
+  // Agregar opciones según el área
+  if (area === 'TCE-PEXT') {
+    const options = [
+        { value: 'camara-inundada-entel', text: 'Cámara inundada Entel' },
+        { value: 'nap-robada-entel', text: 'NAP Robada Entel' },
+        { value: 'reposicion-tapa-camara-entel', text: 'Reposición de tapa en camara Entel' },
+        { value: 'pernos-rodados-sustraidos-entel', text: 'Pernos rodados / Pernos sustraidos Entel' },
+        { value: 'cambio-caja-nap-ausencia-borneras-entel', text: 'Cambio de Caja NAP por ausencia de borneras Entel' },
+        { value: 'potencia-atenuada-entel', text: 'Potencia Atenuada Entel' },
+        { value: 'nap-rotulo-errado-sin-rotulo-entel', text: 'NAP con rotulo errado / sin rotulo Entel' }
+    ];
+    
+    options.forEach(option => {
+      const optionElement = document.createElement('option');
+      optionElement.value = option.value;
+      optionElement.textContent = option.text;
+      typificationSelect.appendChild(optionElement);
+    });
+  } else if (area === 'TCE-CIO') {
+    const options = [
+        { value: 'nap-puerto-saturado-sin-disponibilidad-pangeaco', text: 'NAP / Puerto saturado (Sin disponibilidad) Pangeaco' },
+        { value: 'nap-robada-pangeaco', text: 'NAP Robada Pangeaco' },
+        { value: 'potencia-atenuada-pangeaco', text: 'Potencia Atenuada Pangeaco' },
+        { value: 'manipulacion-nap-mufa-pangeaco', text: 'Manipulación en NAP / Mufa Pangeaco' }
+    ];
+    
+    options.forEach(option => {
+      const optionElement = document.createElement('option');
+      optionElement.value = option.value;
+      optionElement.textContent = option.text;
+      typificationSelect.appendChild(optionElement);
+    });
+  }
+}
+
+// Función para guardar cancelación
+function saveCancellation() {
+  const orderId = document.getElementById('cancelOrderId').textContent;
+  const cancelReason = document.getElementById('cancelReason').value;
+  const cancelComment = document.getElementById('cancelComment').value;
+  
+  if (!cancelReason) {
+    alert('Por favor seleccione un motivo');
+    return;
+  }
+  
+  // Actualizar estado de la orden a "cancelled"
+  ordersData[orderId].status = 'cancelled';
+  
+  // Obtener el texto del motivo seleccionado
+  const reasonText = document.getElementById('cancelReason').options[document.getElementById('cancelReason').selectedIndex].text;
+  
+  // Agregar evento al historial
+  const now = new Date();
+  const dateStr = now.toISOString().split('T')[0];
+  const timeStr = now.toTimeString().split(' ')[0].substring(0, 5);
+  
+  let area = '';
+  if (currentPage === 'tce-bandeja') {
+    area = 'TCE';
+  } else if (currentPage === 'tce-pext-bandeja') {
+    area = 'TCE-PEXT';
+  } else if (currentPage === 'tce-cio-bandeja') {
+    area = 'TCE-CIO';
+  }
+  
+  ordersData[orderId].history.push({
+    date: dateStr,
+    time: timeStr,
+    title: 'Orden cancelada',
+    description: `Motivo: ${reasonText}. ${cancelComment ? 'Comentario: ' + cancelComment : ''}`,
+    status: 'completed',
+    user: ordersData[orderId].operator,
+    area: area
+  });
+  
+  // Actualizar la tabla
+  let tableBodyId;
+  if (currentPage === 'tce-bandeja') {
+    tableBodyId = 'tceTableBody';
+  } else if (currentPage === 'tce-pext-bandeja') {
+    tableBodyId = 'tcePextTableBody';
+  } else if (currentPage === 'tce-cio-bandeja') {
+    tableBodyId = 'tceCioTableBody';
+  }
+  
+  const row = document.querySelector(`#${tableBodyId} .order-row[data-order-id="${orderId}"]`);
+  if (row) {
+    row.setAttribute('data-status', 'cancelled');
+    const statusCell = row.querySelector('.status-badge');
+    
+    // Actualizar clase y texto del estado
+    if (currentPage === 'tce-bandeja') {
+      statusCell.className = 'status-badge status-cancelled';
+      statusCell.textContent = 'Cancelado';
+    } else if (currentPage === 'tce-cio-bandeja') {
+      statusCell.className = 'status-badge status-cancelled';
+      statusCell.textContent = 'Cancelado';
+    }
+  }
+  
+  alert(`Orden ${orderId} cancelada correctamente.\n\nMotivo: ${reasonText}${cancelComment ? '\nComentario: ' + cancelComment : ''}`);
+  
+  closeModal('cancelOrderModal');
+  closeModal('orderDetailModal');
+}
+
+// Función para guardar escalado
+function saveEscalation() {
+  const orderId = document.getElementById('escalateOrderId').textContent;
+  const area = document.getElementById('escalateArea').value;
+  const systemCode = document.getElementById('systemCode').value;
+  const typification = document.getElementById('typification').value;
+  const escalateComment = document.getElementById('escalateComment').value;
+  
+  if (!area || !systemCode || !typification) {
+    alert('Por favor complete todos los campos obligatorios');
+    return;
+  }
+  
+  // Actualizar estado de la orden a "escalated"
+  ordersData[orderId].status = 'escalated';
+  
+  // Obtener el texto de la tipificación seleccionada
+  const typificationText = document.getElementById('typification').options[document.getElementById('typification').selectedIndex].text;
+  
+  // Agregar evento al historial
+  const now = new Date();
+  const dateStr = now.toISOString().split('T')[0];
+  const timeStr = now.toTimeString().split(' ')[0].substring(0, 5);
+  
+  ordersData[orderId].history.push({
+    date: dateStr,
+    time: timeStr,
+    title: 'Orden escalada',
+    description: `Área: ${area}. Código Sistema: ${systemCode}. Tipificación: ${typificationText}. ${escalateComment ? 'Comentario: ' + escalateComment : ''}`,
+    status: 'completed',
+    user: ordersData[orderId].operator,
+    area: area
+  });
+  
+  // Actualizar la tabla
+  let tableBodyId;
+  if (currentPage === 'tce-bandeja') {
+    tableBodyId = 'tceTableBody';
+  } else if (currentPage === 'tce-pext-bandeja') {
+    tableBodyId = 'tcePextTableBody';
+  } else if (currentPage === 'tce-cio-bandeja') {
+    tableBodyId = 'tceCioTableBody';
+  }
+  
+  const row = document.querySelector(`#${tableBodyId} .order-row[data-order-id="${orderId}"]`);
+  if (row) {
+    row.setAttribute('data-status', 'escalated');
+    const statusCell = row.querySelector('.status-badge');
+    
+    // Actualizar clase y texto del estado
+    if (currentPage === 'tce-bandeja') {
+      statusCell.className = 'status-badge status-escalated';
+      statusCell.textContent = 'Escalado';
+    } else if (currentPage === 'tce-cio-bandeja') {
+      statusCell.className = 'status-badge status-escalated';
+      statusCell.textContent = 'Escalado';
+    }
+  }
+  
+  alert(`Orden ${orderId} escalada correctamente a ${area}.\n\nCódigo Sistema: ${systemCode}\nTipificación: ${typificationText}${escalateComment ? '\nComentario: ' + escalateComment : ''}`);
+  
+  closeModal('escalateOrderModal');
+  closeModal('orderDetailModal');
+}
+
+// Función para abrir el modal de respuesta
+function openResponseModal() {
+  document.getElementById('respondOrderId').textContent = currentOrderId;
+  document.getElementById('responseReason').value = '';
+  document.getElementById('responseComment').value = '';
+  
+  document.getElementById('respondOrderModal').style.display = 'flex';
+}
+
+// Función para guardar la respuesta
+function saveResponse() {
+  const orderId = document.getElementById('respondOrderId').textContent;
+  const responseReason = document.getElementById('responseReason').value;
+  const responseComment = document.getElementById('responseComment').value;
+  
+  if (!responseReason) {
+    alert('Por favor seleccione un motivo');
+    return;
+  }
+  
+  // Actualizar estado de la orden a "reprogramacion"
+  ordersData[orderId].status = 'reprogramacion';
+  
+  // Obtener el texto del motivo seleccionado
+  const reasonText = document.getElementById('responseReason').options[document.getElementById('responseReason').selectedIndex].text;
+  
+  // Determinar el área según la página actual
+  let area = '';
+  if (currentPage === 'tce-pext-bandeja') {
+    area = 'TCE-PEXT';
+  } else if (currentPage === 'tce-cio-bandeja') {
+    area = 'TCE-CIO';
+  } else if (currentPage === 'tce-bandeja') {
+    area = 'TCE';
+  }
+  
+  // Agregar evento al historial
+  const now = new Date();
+  const dateStr = now.toISOString().split('T')[0];
+  const timeStr = now.toTimeString().split(' ')[0].substring(0, 5);
+  
+  ordersData[orderId].history.push({
+    date: dateStr,
+    time: timeStr,
+    title: 'Orden enviada a backlog',
+    description: `Motivo: ${reasonText}. ${responseComment ? 'Comentario: ' + responseComment : ''}`,
+    status: 'completed',
+    user: `Técnico ${area}`,
+    area: area
+  });
+  
+  // Determinar en qué tabla buscar según la página actual
+  let tableBodyId;
+  if (currentPage === 'tce-bandeja') {
+    tableBodyId = 'tceTableBody';
+  } else if (currentPage === 'tce-pext-bandeja') {
+    tableBodyId = 'tcePextTableBody';
+  } else if (currentPage === 'tce-cio-bandeja') {
+    tableBodyId = 'tceCioTableBody';
+  }
+  
+  // Actualizar la tabla
+  const row = document.querySelector(`#${tableBodyId} .order-row[data-order-id="${orderId}"]`);
+  if (row) {
+    row.setAttribute('data-status', 'reprogramacion');
+    const statusCell = row.querySelector('.status-badge');
+    
+    // Determinar la clase de estado según la página actual
+    if (currentPage === 'tce-pext-bandeja') {
+      statusCell.className = 'status-badge status-reprogramacion';
+    } else if (currentPage === 'tce-cio-bandeja') {
+      statusCell.className = 'status-badge status-cio-reprogramacion';
+    } else if (currentPage === 'tce-bandeja') {
+      statusCell.className = 'status-badge status-reprogramacion';
+    }
+    
+    statusCell.textContent = 'Reprogramación';
+  }
+  
+  alert(`Orden ${orderId} enviada a backlog correctamente.\n\nEstado: Reprogramación\nMotivo: ${reasonText}${responseComment ? '\nComentario: ' + responseComment : ''}`);
+  
+  closeModal('respondOrderModal');
+  closeModal('orderDetailModal');
+}
+
+// Función para cargar el historial de la orden
+function loadOrderHistory(history) {
+  const timeline = document.getElementById('orderTimeline');
+  timeline.innerHTML = '';
+  
+  if (history && history.length > 0) {
+    history.forEach(event => {
+      const eventElement = document.createElement('div');
+      
+      // Determinar la clase según el área
+      let areaClass = '';
+      if (event.area === 'TCE-PEXT') {
+        areaClass = 'tcepext';
+      } else if (event.area === 'TCE-CIO') {
+        areaClass = 'tcecio';
+      } else if (event.area === 'ETC') {
+        areaClass = 'etc';
+      } else if (event.area === 'TCE') {
+        areaClass = 'tce';
+      } else {
+        areaClass = event.status;
+      }
+      
+      eventElement.className = `timeline-item ${areaClass}`;
+      
+      eventElement.innerHTML = `
+        <div class="timeline-date">${event.date} ${event.time}</div>
+        <div class="timeline-area">${event.area}</div>
+        <div class="timeline-user">Usuario: ${event.user || 'Sistema'}</div>
+        <div class="timeline-content">${event.title}: ${event.description}</div>
+      `;
+      
+      timeline.appendChild(eventElement);
+    });
+  } else {
+    timeline.innerHTML = `
+      <div class="timeline-item">
+        <div class="timeline-content" style="text-align: center; color: var(--gray-500);">
+          No hay historial disponible para esta orden
+        </div>
+      </div>
+    `;
+  }
+}
+
+// Función para cambiar pestaña en el modal de detalle
+function switchDetailTab(tabName) {
+  // Ocultar todas las pestañas
+  const tabs = document.querySelectorAll('#orderDetailModal .detail-tab');
+  tabs.forEach(tab => tab.classList.remove('active'));
+
+  const contents = document.querySelectorAll('#orderDetailModal .detail-content');
+  contents.forEach(content => content.classList.remove('active'));
+
+  // Mostrar la pestaña seleccionada
+  if (tabName === 'datos') {
+    document.getElementById('datosTab').classList.add('active');
+    document.getElementById('datos-tab').classList.add('active');
+  } else if (tabName === 'acciones') {
+    document.getElementById('accionesTab').classList.add('active');
+    document.getElementById('acciones-tab').classList.add('active');
+  } else if (tabName === 'historial') {
+    document.getElementById('historialTab').classList.add('active');
+    document.getElementById('historial-tab').classList.add('active');
+  }
+}
+
+// Función para filtrar órdenes
+function filterOrders(filter) {
+  // Actualizar el filtro actual
+  currentFilter = filter;
+  
+  const buttons = document.querySelectorAll('.filter-btn');
+  buttons.forEach(btn => btn.classList.remove('active'));
+  event.target.classList.add('active');
+
+  // Determinar qué tabla filtrar según la página actual
+  let tableBody;
+  if (currentPage === 'tce-bandeja') {
+    tableBody = document.getElementById('tceTableBody');
+  } else if (currentPage === 'tce-pext-bandeja') {
+    tableBody = document.getElementById('tcePextTableBody');
+  } else if (currentPage === 'tce-cio-bandeja') {
+    tableBody = document.getElementById('tceCioTableBody');
+  }
+
+  const rows = tableBody.querySelectorAll('.order-row');
+  
+  rows.forEach(row => {
+    const status = row.getAttribute('data-status');
+    
+    if (filter === 'all') {
+      row.style.display = '';
+    } else if (filter === 'pending' && status === 'pending') {
+      row.style.display = '';
+    } else if (filter === 'atencion' && status === 'atencion') {
+      row.style.display = '';
+    } else if (filter === 'cancelled' && status === 'cancelled') {
+      row.style.display = '';
+    } else if (filter === 'escalated' && status === 'escalated') {
+      row.style.display = '';
+    } else if (filter === 'reprogramacion' && status === 'reprogramacion') {
+      row.style.display = '';
+    } else if (filter === 'processing' && status === 'processing') {
+      row.style.display = '';
+    } else if (filter === 'completed' && status === 'completed') {
+      row.style.display = '';
+    } else {
+      row.style.display = 'none';
+    }
+  });
+}
+
+// Función para alternar la visibilidad de los módulos del menú
+function toggleModule(moduleId) {
+  const moduleContent = document.getElementById(moduleId);
+  const moduleArrow = moduleContent.previousElementSibling.querySelector('.module-arrow');
+  
+  // Alternar la clase 'expanded' para mostrar/ocultar el contenido
+  moduleContent.classList.toggle('expanded');
+  
+  // Rotar la flecha
+  moduleArrow.classList.toggle('rotated');
+}
+
+// Función para cerrar modal
+function closeModal(modalId) {
+  document.getElementById(modalId).style.display = 'none';
+}
+
+// Función para manejar la navegación del menú
+document.querySelectorAll('.menu-item').forEach(item => {
+  item.addEventListener('click', function(e) {
+    e.preventDefault();
+    
+    // Obtener la página a mostrar
+    const page = this.getAttribute('data-page');
+    
+    // Cambiar a la página seleccionada
+    changePage(page);
+  });
+});
+
+// Función para el botón de ver órdenes
+document.getElementById('viewOrdersBtn').addEventListener('click', function() {
+  // Activar el botón de filtro todas
+  const filterButtons = document.querySelectorAll('.filter-btn');
+  filterButtons.forEach(btn => btn.classList.remove('active'));
+  document.querySelector('.filter-btn[onclick="filterOrders(\'all\')"]').classList.add('active');
+
+  // Filtrar todas las órdenes
+  let tableBody;
+  if (currentPage === 'tce-bandeja') {
+    tableBody = document.getElementById('tceTableBody');
+  } else if (currentPage === 'tce-pext-bandeja') {
+    tableBody = document.getElementById('tcePextTableBody');
+  } else if (currentPage === 'tce-cio-bandeja') {
+    tableBody = document.getElementById('tceCioTableBody');
+  }
+
+  const rows = tableBody.querySelectorAll('.order-row');
+  rows.forEach(row => {
+    row.style.display = '';
+  });
+
+  // Scroll hasta la tabla
+  document.querySelector('.main-content').scrollIntoView({ behavior: 'smooth' });
+});
+
+// Inicializar la página
+document.addEventListener('DOMContentLoaded', function() {
+  // Mostrar la página TCE por defecto
+  changePage('tce-bandeja');
+});
+
+// Cerrar modales al hacer clic fuera
+window.onclick = function(event) {
+  const modals = document.querySelectorAll('.modal');
+  modals.forEach(modal => {
+    if (event.target === modal) {
+      modal.style.display = 'none';
+    }
+  });
+}
+</script>
+</body>
+</html>

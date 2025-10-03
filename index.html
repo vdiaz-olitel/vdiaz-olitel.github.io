@@ -6,6 +6,8 @@
 <title>Sistema de Gestión de Órdenes</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
 <style>
 /* Estilos existentes sin cambios */
 * {
@@ -92,7 +94,70 @@ gap: 10px;
 flex: 1;
 }
 
-.menu-item {
+/* Estilos para módulos del menú */
+.menu-module {
+  margin-bottom: 8px;
+}
+
+.module-title {
+  display: flex;
+  align-items: center;
+  padding: 12px 20px;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  border-left: 3px solid transparent;
+}
+
+.module-title:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.module-title i:first-child {
+  width: 24px;
+  margin-right: 12px;
+  text-align: center;
+  font-size: 18px;
+}
+
+.module-title span {
+  flex: 1;
+}
+
+.module-arrow {
+  font-size: 12px;
+  transition: transform 0.3s;
+}
+
+.module-arrow.rotated {
+  transform: rotate(180deg);
+}
+
+.module-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease-out;
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.module-content.expanded {
+  max-height: 500px; /* Ajustar según la cantidad de elementos */
+}
+
+.module-content .menu-item {
+  padding-left: 40px; /* Espacio adicional para submenús */
+  font-size: 14px;
+}
+
+.module-content .menu-item i {
+  width: 20px;
+  margin-right: 12px;
+  font-size: 16px;
+}
+
+.menu-item,.profile {
 display: block;
 padding: 14px 20px;
 color: rgba(255, 255, 255, 0.8);
@@ -105,12 +170,12 @@ overflow: hidden;
 text-overflow: ellipsis;
 }
 
-.menu-item:hover {
+.menu-item:hover,.profile:hover {
 background-color: rgba(255, 255, 255, 0.1);
 color: white;
 }
 
-.menu-item.active {
+.menu-item.active, .profile.active {
 background-color: rgba(255, 255, 255, 0.15);
 color: white;
 }
@@ -131,7 +196,7 @@ border-left-color: var(--cierre-color);
 border-left-color: var(--finalizado-color);
 }
 
-.menu-item i {
+.menu-item i, .profile i {
 width: 24px;
 margin-right: 15px;
 text-align: center;
@@ -1485,52 +1550,378 @@ max-width: 95%;
 padding: 12px 16px;
 }
 }
+
+/* Estilos para el encabezado del dashboard */
+.dashboard-header {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: white;
+    padding: 2rem 0;
+    position: relative;
+    overflow: hidden;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.dashboard-header .container {
+    position: relative;
+    z-index: 2;
+}
+
+.dashboard-header h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.timestamp {
+    font-size: 0.9rem;
+    opacity: 0.8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.logo-left, .logo-right {
+    position: absolute;
+    font-size: 1.2rem;
+    font-weight: 700;
+    opacity: 0.2;
+    z-index: 1;
+}
+
+.logo-left {
+    top: 1rem;
+    left: 1rem;
+}
+
+.logo-right {
+    bottom: 1rem;
+    right: 1rem;
+}
+
+/* Estilos para secciones */
+.section-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--gray-800);
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Estilos para el buscador */
+.search-box {
+    display: flex;
+    align-items: center;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    width: 300px;
+}
+
+.search-box input {
+    border: none;
+    padding: 0.75rem 1rem;
+    flex: 1;
+    font-size: 0.9rem;
+}
+
+.search-box button {
+    background-color: var(--primary);
+    color: white;
+    border: none;
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.search-box button:hover {
+    background-color: var(--primary-dark);
+}
+
+/* Estilos para valores y etiquetas de estadísticas */
+.stat-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    line-height: 1;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: var(--gray-600);
+    font-weight: 500;
+}
+
+.stat-details {
+    margin-top: 1rem;
+    font-size: 0.85rem;
+}
+
+.stat-details .row {
+    display: flex;
+    margin-bottom: 0.25rem;
+}
+
+.stat-details .row > div:first-child {
+    color: var(--gray-500);
+    font-weight: 500;
+}
+
+.stat-details .row > div:last-child {
+    font-weight: 600;
+    color: var(--gray-700);
+}
+
+/* Estilos para contratistas */
+.contractor-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--gray-200);
+}
+
+.contractor-item:last-child {
+    border-bottom: none;
+}
+
+.contractor-name {
+    font-weight: 500;
+    color: var(--gray-700);
+}
+
+.contractor-count {
+    background-color: var(--primary);
+    color: white;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+/* Estilos para filtros de certificaciones */
+.cert-date-filter {
+    background-color: var(--gray-100);
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+}
+
+.cert-date-filter .form-label {
+    font-weight: 600;
+    color: var(--gray-700);
+    margin-bottom: 0.25rem;
+}
+
+.cert-date-filter .form-control {
+    border: 1px solid var(--gray-300);
+    border-radius: 4px;
+}
+
+.cert-date-filter .btn {
+    background-color: var(--primary);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.cert-date-filter .btn:hover {
+    background-color: var(--primary-dark);
+}
+
+/* Estilos para la sección de certificaciones */
+.tech-card .card-body .row {
+    margin-bottom: 1.5rem;
+}
+
+.tech-card .card-body .row:last-child {
+    margin-bottom: 0;
+}
+
+.tech-card .card-body h5 {
+    font-weight: 600;
+    color: var(--gray-700);
+    margin-bottom: 1rem;
+}
+
+/* Estilos para la sección de agentes */
+.agent-card .date-filter {
+    margin-bottom: 1.5rem;
+}
+
+.agent-card .date-filter .form-label {
+    font-weight: 600;
+    color: var(--gray-700);
+}
+
+.agent-card .agent-item {
+    transition: all 0.3s ease;
+}
+
+.agent-card .agent-item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+}
+
+.agent-card .agent-initials {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+}
+
+.agent-card .agent-name {
+    font-size: 1.1rem;
+    color: var(--gray-800);
+}
+
+.agent-card .agent-stats {
+    margin-top: 0.5rem;
+}
+
+.agent-card .agent-stat-label {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.agent-card .agent-stat-value {
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.agent-card .agent-status {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Estilos para la leyenda */
+.legend {
+    background-color: var(--gray-100);
+    border-radius: 8px;
+    padding: 1rem;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    color: var(--gray-600);
+}
+
+.legend-icon {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Media queries para dispositivos móviles */
+@media (max-width: 768px) {
+    .dashboard-header h1 {
+        font-size: 1.8rem;
+    }
+    
+    .search-box {
+        width: 100%;
+        margin-top: 1rem;
+    }
+    
+    .stat-value {
+        font-size: 2rem;
+    }
+    
+    .agent-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    
+    .agent-status {
+        margin-left: 0;
+    }
+}
 </style>
 </head>
 <body>
 <!-- Sidebar -->
 <aside class="sidebar">
-<div class="sidebar-header">
-<div class="sidebar-title">
-<i class="fas fa-satellite-dish"></i>
-<span>Sistema de Gestión</span>
-</div>
-</div>
+  <div class="sidebar-header">
+    <div class="sidebar-title">
+      <i class="fas fa-satellite-dish"></i>
+      <span>SIO</span>
+    </div>
+  </div>
 
-<nav class="sidebar-menu">
-<a href="#" class="menu-item tcp" data-page="tcp">
-<i class="fas fa-tasks"></i>
-<span>Bandeja TCP</span>
-</a>
-<a href="#" class="menu-item backlog" data-page="backlog">
-<i class="fas fa-clock"></i>
-<span>Bandeja Backlog</span>
-</a>
-<a href="#" class="menu-item" data-page="confirmados">
-<i class="fas fa-check-circle"></i>
-<span>Bandeja Confirmados</span>
-</a>
-<a href="#" class="menu-item cierre" data-page="cierre">
-<i class="fas fa-shield-alt"></i>
-<span>Bandeja Cierre Asegurado</span>
-</a>
-<a href="#" class="menu-item finalizado" data-page="finalizado">
-<i class="fas fa-flag-checkered"></i>
-<span>Bandeja Finalizado</span>
-</a>
-<a href="#" class="menu-item derivados" data-page="derivados">
-<i class="fas fa-share-alt"></i>
-<span>Bandeja Derivados</span>
-</a>
-<a href="#" class="menu-item" data-page="cancelados">
-<i class="fas fa-times-circle"></i>
-<span>Bandeja Cancelados</span>
-</a>
-</nav>
+  <nav class="sidebar-menu">
+    <div class="menu-module">
+      <div class="module-title" onclick="toggleModule('gestion-ordenes')">
+        <i class="fas fa-tasks"></i>
+        <span>Torre de control</span>
+        <i class="fas fa-chevron-down module-arrow"></i>
+      </div>
+      <div class="module-content expanded" id="gestion-ordenes">
+        <a href="#" class="menu-item tcp" data-page="tcp">
+          <i class="fas fa-clipboard-list"></i>
+          <span>Bandeja TCP</span>
+        </a>
+        <a href="#" class="menu-item backlog" data-page="backlog">
+          <i class="fas fa-clock"></i>
+          <span>Bandeja Backlog</span>
+        </a>
+        <a href="#" class="menu-item" data-page="confirmados">
+          <i class="fas fa-check-circle"></i>
+          <span>Bandeja Confirmados</span>
+        </a>
+        <a href="#" class="menu-item cierre" data-page="cierre">
+          <i class="fas fa-shield-alt"></i>
+          <span>Bandeja Cierre Asegurado</span>
+        </a>
+        <a href="#" class="menu-item finalizado" data-page="finalizado">
+          <i class="fas fa-flag-checkered"></i>
+          <span>Bandeja Finalizado</span>
+        </a>
+        <a href="#" class="menu-item derivados" data-page="derivados">
+          <i class="fas fa-share-alt"></i>
+          <span>Bandeja Derivados</span>
+        </a>
+        <a href="#" class="menu-item" data-page="cancelados">
+          <i class="fas fa-times-circle"></i>
+          <span>Bandeja Cancelados</span>
+        </a>
+      </div>
+      <div class="module-title" onclick="toggleModule('profiles')">
+        <i class="fas fa-tasks"></i>
+        <span>Perfiles</span>
+        <i class="fas fa-chevron-down module-arrow"></i>
+      </div>
+      <div class="module-content" id="profiles">
+        <a href="comercial-page.html" class="profile">
+          <i class="fas fa-user"></i>
+          <span>Comercial</span>
+        </a>
+        <a href="contrata-page.html" class="profile">
+          <i class="fas fa-user"></i>
+          <span>Contrata</span>
+        </a>
+        <a href="tce-page.html" class="profile">
+          <i class="fas fa-user"></i>
+          <span>TCE</span>
+        </a>
+      </div>
+    </div>
+  </nav>
 
-<div class="sidebar-footer">
-<p>© 2023 Sistema de Gestión de Telecomunicaciones</p>
-</div>
+  <div class="sidebar-footer">
+    <p>© 2023 Sistema de Gestión de Telecomunicaciones</p>
+  </div>
 </aside>
 
 <!-- Main Content -->
@@ -2424,7 +2815,7 @@ padding: 12px 16px;
     </table>
   </div>
 </div>
-
+</div>
 </main>
 
 <!-- Modal Detalle de Orden -->
@@ -2973,11 +3364,10 @@ Gracias por su atención.
 <label for="backlogReason">Motivo:</label>
 <select id="backlogReason" class="form-control">
 <option value="">Seleccione motivo</option>
-<option value="no-contact">No hubo contacto con el cliente</option>
-<option value="rescheduled">Cliente reprogramó la fecha</option>
-<option value="postponed">Cliente postergó la instalación</option>
-<option value="wrong-info">Información incorrecta</option>
-<option value="additional-info">Se necesita información adicional</option>
+<option value="">Cliente solicita reprogramación</option>
+<option value="">Cliente llega tarde y fuera del horario autorizado para ejecutar trabajos internos</option>
+<option value="">Cliente ausente no agendado</option>
+<option value="">Manipulación lado cliente (cables invertidos, sueltos, flojo)</option>
 </select>
 </div>
 <div class="form-group">
@@ -3020,10 +3410,20 @@ Gracias por su atención.
 <label for="deriveReason">Motivo:</label>
 <select id="deriveReason" class="form-control">
 <option value="">Seleccione motivo</option>
-<option value="no-located">Cliente no localizado</option>
-<option value="negotiation">Requiere negociación</option>
-<option value="info-needed">Se necesita más información</option>
-<option value="commercial-case">Caso comercial</option>
+<option value="">Servicio operativo (Requerimiento Postventa)</option>
+<option value="">Orden cancelada en oneclick</option>
+  <option value="">Dirección errónea</option>
+  <option value="">Error en el tipo de servicio contratado</option>
+  <option value="">Venta duplicada Empresas</option>
+  <option value="">Venta duplicada Hogar</option>
+  <option value="">Galería / C.C. previamente bloqueado para venta</option>
+  <option value="">Cliente indeciso, requiere mayor información del producto</option>
+  <option value="">Aplica costos adicionales para revisión</option>
+  <option value="">Cliente no desea atención (se escala a comercial)</option>
+  <option value="">Cliente no solicitó el servicio</option>
+  <option value="">Desiste de servicio por contraoferta</option>
+  <option value="">Desiste del servicio por mundanza o cambio de local</option>
+  <option value="">Servicio operativo (se realizaron pruebas)</option>
 </select>
 </div>
 <div class="form-group">
@@ -3052,11 +3452,18 @@ Gracias por su atención.
 <label for="cancelledReason">Motivo:</label>
 <select id="cancelledReason" class="form-control">
 <option value="">Seleccione motivo</option>
-<option value="not-feasible">Instalación inviable</option>
-<option value="client-cancel">Cliente desistió</option>
-<option value="no-coverage">Sin cobertura</option>
-<option value="commercial-case">Caso comercial - cancelado</option>
-<option value="no-contact">Imposible contactar al cliente</option>
+<option value="">Orden cancelada en oneclick</option>
+<option value="">Dirección errónea</option>
+<option value="">Error en el tipo de servicio contratado</option>
+<option value="">Venta duplicada Empresas</option>
+<option value="">Venta duplicada Hogar</option>
+<option value="">Galería / C.C. previamente bloqueado para venta</option>
+<option value="">Aplica costos adicionales para revisión</option>
+<option value="">Cliente no desea atención </option>
+<option value="">Cliente no solicitó el servicio</option>
+<option value="">Desiste de servicio por contraoferta</option>
+<option value="">Desiste del servicio por mundanza o cambio de local</option>
+<option value="">Servicio operativo (se realizaron pruebas)</option>
 </select>
 </div>
 <div class="form-group">
@@ -3404,11 +3811,18 @@ Agradecemos su tiempo y colaboración.
           <label for="cancelDerivedReason">Motivo de Anulación:</label>
           <select id="cancelDerivedReason" class="form-control">
             <option value="">Seleccione motivo</option>
-            <option value="client-cancel">Cliente desistió del servicio</option>
-            <option value="not-feasible">Instalación no viable</option>
-            <option value="no-coverage">Sin cobertura en la zona</option>
-            <option value="commercial-rejection">Rechazo comercial</option>
-            <option value="other">Otro motivo</option>
+            <option value="">Orden cancelada en oneclick</option>
+            <option value="">Dirección errónea</option>
+            <option value="">Error en el tipo de servicio contratado</option>
+            <option value="">Venta duplicada Empresas</option>
+            <option value="">Venta duplicada Hogar</option>
+            <option value="">Galería / C.C. previamente bloqueado para venta</option>
+            <option value="">Aplica costos adicionales para revisión</option>
+            <option value="">Cliente no desea atención </option>
+            <option value="">Cliente no solicitó el servicio</option>
+            <option value="">Desiste de servicio por contraoferta</option>
+            <option value="">Desiste del servicio por mundanza o cambio de local</option>
+            <option value="">Servicio operativo (se realizaron pruebas)</option>
           </select>
         </div>
         <div class="form-group">
@@ -3446,11 +3860,20 @@ Agradecemos su tiempo y colaboración.
           <label for="rederiveReason">Motivo de Nueva Derivación:</label>
           <select id="rederiveReason" class="form-control">
             <option value="">Seleccione motivo</option>
-            <option value="insufficient-info">Información insuficiente</option>
-            <option value="additional-info">Se requiere más información</option>
-            <option value="negotiation">Necesita nueva negociación</option>
-            <option value="authorization">Requiere nueva autorización</option>
-            <option value="other">Otro motivo</option>
+            <option value="">Orden cancelada en oneclick</option>
+            <option value="">Servicio operativo (Requerimiento Postventa)</option>
+            <option value="">Dirección errónea</option>
+            <option value="">Error en el tipo de servicio contratado</option>
+            <option value="">Venta duplicada Empresas</option>
+            <option value="">Venta duplicada Hogar</option>
+            <option value="">Galería / C.C. previamente bloqueado para venta</option>
+            <option value="">Cliente indeciso, requiere mayor información del producto</option>
+            <option value="">Aplica costos adicionales para revisión</option>
+            <option value="">Cliente no desea atención (se escala a comercial)</option>
+            <option value="">Cliente no solicitó el servicio</option>
+            <option value="">Desiste de servicio por contraoferta</option>
+            <option value="">Desiste del servicio por mundanza o cambio de local</option>
+            <option value="">Servicio operativo (se realizaron pruebas)</option>
           </select>
         </div>
         <div class="form-group">
@@ -6211,11 +6634,78 @@ modal.style.display = 'none';
 });
 }
 
+// Función para alternar la visibilidad de los módulos del menú
+function toggleModule(moduleId) {
+  const moduleContent = document.getElementById(moduleId);
+  const moduleArrow = moduleContent.previousElementSibling.querySelector('.module-arrow');
+  
+  // Alternar la clase 'expanded' para mostrar/ocultar el contenido
+  moduleContent.classList.toggle('expanded');
+  
+  // Rotar la flecha
+  moduleArrow.classList.toggle('rotated');
+  
+  // Cerrar otros módulos si se desea (opcional)
+  // Si quieres que solo un módulo esté abierto a la vez, descomenta el siguiente bloque:
+  /*
+  const allModules = document.querySelectorAll('.module-content');
+  const allArrows = document.querySelectorAll('.module-arrow');
+  
+  allModules.forEach(module => {
+    if (module.id !== moduleId && module.classList.contains('expanded')) {
+      module.classList.remove('expanded');
+      const arrow = module.previousElementSibling.querySelector('.module-arrow');
+      arrow.classList.remove('rotated');
+    }
+  });
+  */
+}
+
+// Función para manejar la navegación del menú lateral
+document.querySelectorAll('.menu-item').forEach(item => {
+  item.addEventListener('click', function(e) {
+    e.preventDefault();
+    
+    // Obtener la página a mostrar
+    const page = this.getAttribute('data-page');
+    
+    // Cambiar a la página seleccionada
+    changePage(page);
+    
+    // Marcar el elemento del menú como activo
+    document.querySelectorAll('.menu-item').forEach(menuItem => {
+      menuItem.classList.remove('active');
+    });
+    this.classList.add('active');
+  });
+});
+
+// Inicializar la página
+document.addEventListener('DOMContentLoaded', function() {
+    // Actualizar la hora inmediatamente al cargar la página
+    updateCurrentTime();
+    
+    // Actualizar la hora cada segundo
+    setInterval(updateCurrentTime, 1000);
+    
+    // Mostrar la página TCP por defecto
+    changePage('tcp');
+    
+    // Expandir el primer módulo por defecto (opcional)
+    const firstModule = document.querySelector('.module-content');
+    const firstArrow = document.querySelector('.module-arrow');
+    if (firstModule && firstArrow) {
+        firstModule.classList.add('expanded');
+        firstArrow.classList.add('rotated');
+    }
+});
+
 // Inicializar la página
 document.addEventListener('DOMContentLoaded', function() {
 // Mostrar la página finalizado por defecto
 changePage('tcp');
 });
 </script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

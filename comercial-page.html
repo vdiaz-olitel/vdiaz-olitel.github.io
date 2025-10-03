@@ -157,7 +157,7 @@ margin-right: 12px;
 font-size: 16px;
 }
 
-.menu-item {
+.menu-item,.profile {
 display: block;
 padding: 14px 20px;
 color: rgba(255, 255, 255, 0.8);
@@ -170,12 +170,12 @@ overflow: hidden;
 text-overflow: ellipsis;
 }
 
-.menu-item:hover {
+.menu-item:hover,.profile:hover {
 background-color: rgba(255, 255, 255, 0.1);
 color: white;
 }
 
-.menu-item.active {
+.menu-item.active, .profile.active {
 background-color: rgba(255, 255, 255, 0.15);
 color: white;
 }
@@ -192,7 +192,7 @@ border-left-color: var(--success);
 border-left-color: var(--primary);
 }
 
-.menu-item i {
+.menu-item i, .profile i {
 width: 24px;
 margin-right: 15px;
 text-align: center;
@@ -1111,8 +1111,8 @@ color: var(--gray-700);
 <aside class="sidebar">
   <div class="sidebar-header">
     <div class="sidebar-title">
-      <i class="fas fa-user-tie"></i>
-      <span>Dealer</span>
+      <i class="fas fa-satellite-dish"></i>
+      <span>SIO</span>
     </div>
   </div>
 
@@ -1135,6 +1135,25 @@ color: var(--gray-700);
         <a href="#" class="menu-item dealer-buscador" data-page="dealer-buscador">
           <i class="fas fa-search"></i>
           <span>Buscador de Órdenes</span>
+        </a>
+      </div>
+      <div class="module-title" onclick="toggleModule('profiles')">
+        <i class="fas fa-tasks"></i>
+        <span>Perfiles</span>
+        <i class="fas fa-chevron-down module-arrow"></i>
+      </div>
+      <div class="module-content" id="profiles">
+        <a href="agendadora-page.html" class="profile">
+          <i class="fas fa-user"></i>
+          <span>Agendadora</span>
+        </a>
+        <a href="contrata-page.html" class="profile">
+          <i class="fas fa-user"></i>
+          <span>Contrata</span>
+        </a>
+        <a href="tce-page.html" class="profile">
+          <i class="fas fa-user"></i>
+          <span>TCE</span>
         </a>
       </div>
     </div>
